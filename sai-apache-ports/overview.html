@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SAI Port Overview</title>
-<meta name="description" content="What DataStax main-5.0 was missing from Apache Cassandra's SAI fixes, and what the series restores.">
+<meta name="description" content="Overview of the Apache Cassandra SAI fixes restored on DataStax main-5.0.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
 <style>
@@ -52,7 +52,7 @@ td code { white-space: nowrap; }
 em { color: var(--muted); }
 pre.mermaid { margin: 16px 0; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
   overflow-x: auto; text-align: center; font-family: var(--font-body); }
-#appendix-every-commit ~ .tbl { max-height: 85vh; overflow: auto; }
+#commit-list ~ .tbl { max-height: 85vh; overflow: auto; }
 .split { display: flex; height: 22px; border-radius: 6px; overflow: hidden; margin: 18px 0 8px; gap: 2px; }
 .legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13.5px; color: var(--muted); margin: 0 0 16px; }
 .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; background: var(--c); }
@@ -68,7 +68,7 @@ pre.mermaid { margin: 16px 0; padding: 16px; background: var(--surface); border:
   .tbl { max-height: 85vh; }
   th, td { padding: 8px 6px; }
   td code { white-space: normal; }
-  td a code, #appendix-every-commit ~ .tbl td code { white-space: nowrap; }
+  td a code, #commit-list ~ .tbl td code { white-space: nowrap; }
   td:nth-child(2):last-child { overflow-wrap: anywhere; }
   main { padding: 20px 16px 32px; }
   h1 { font-size: 26px; }
@@ -80,14 +80,14 @@ pre.mermaid { margin: 16px 0; padding: 16px; background: var(--surface); border:
 <nav class="toc" aria-label="Contents">
 <a class="home" href="../">AI review guides</a>
 <ol>
-<li><a class="s" href="#what-was-missing">What was missing</a></li>
-<li><a class="s" href="#in-numbers">In numbers</a></li>
+<li><a class="s" href="#fixes-by-area">Fixes by area</a></li>
+<li><a class="s" href="#totals">Totals</a></li>
 <li><a class="s" href="./">Review guide &rarr;</a></li>
 <li><a class="s" href="audit-report.html">Audit report &rarr;</a></li>
 </ol>
 </nav>
 <main>
-<h1>Why this work: what DataStax main-5.0's SAI was missing</h1>
+<h1>Overview: Apache SAI fixes on DataStax main-5.0</h1>
 <p>An audit compared every Apache <code>cassandra-5.0</code> and <code>trunk</code> SAI commit with DataStax main-5.0 by behaviour, and filed
 every bug it found. A series of 107 commits restores the missing Apache fixes that apply to main-5.0 and fixes
 DataStax bugs in the same code. The <a href="./">review guide</a> says how to review it; the <a href="audit-report.html">audit report</a>
@@ -96,7 +96,7 @@ has the details.</p>
 <span style="flex: 34" class="s1"></span><span style="flex: 120" class="s2"></span><span style="flex: 57" class="s3"></span><span style="flex: 4" class="s4"></span><span style="flex: 5" class="s5"></span>
 </div>
 <p class="legend"><span class="s1">Restored by the series: 34</span> <span class="s2">Already present or equivalent: 120</span> <span class="s3">Not applicable: 57</span> <span class="s4">Documented deviation: 4</span> <span class="s5">Deferred to a 6.0-based line: 5</span></p>
-<h2 id="what-was-missing">What was missing</h2>
+<h2 id="fixes-by-area">Fixes by area</h2>
 <div class="tbl"><table>
 <thead>
 <tr>
@@ -127,7 +127,7 @@ has the details.</p>
 <td><a href="https://github.com/JeremiahDJordan/cassandra/commit/0235c5d398482723b2fc97271205ce0b97a9f7c7"><code>0235c5d3984</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/ce4eebbd4f15a594cf9af35ddcaec14b27497c25"><code>ce4eebbd4f1</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/325279bbb41a3b8ea02a0fe287f64d7b9404a01e"><code>325279bbb41</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/f6ac88c6c17f689069a4369eb8e59cddffdf8d5a"><code>f6ac88c6c17</code></a> and others</td>
 </tr>
 <tr>
-<td>When an index is queryable</td>
+<td>Index queryability</td>
 <td>A new index could adopt the files of a dropped index of the same name; indexes could answer without SSTables added by streams, imports or compaction</td>
 <td><a href="https://github.com/JeremiahDJordan/cassandra/commit/995d2963296bcb2c098a5632090d4282ef0080bf"><code>995d2963296</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/c8e58e0487474b5616fde9136b4875e3e8243f5b"><code>c8e58e04874</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/af4e52a0c119fbecc91d715185c8263b2b98e89a"><code>af4e52a0c11</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/041930d6280fc8516c6af3c814e88743bd82b040"><code>041930d6280</code></a> and others</td>
 </tr>
@@ -148,7 +148,7 @@ has the details.</p>
 </tr>
 </tbody>
 </table></div>
-<h2 id="in-numbers">In numbers</h2>
+<h2 id="totals">Totals</h2>
 <ul>
 <li>183 new issues filed on the <a href="https://github.com/JeremiahDJordan/cassandra/issues">fork</a>, 32 of them blocker or
 critical, with 209 pull requests against the fork's copies of the released DataStax and Apache branches.</li>

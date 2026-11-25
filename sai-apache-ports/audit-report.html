@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Which Apache SAI fixes DataStax main-5.0 was missing, and the series that restores them.">
+<meta name="description" content="Audit report of Apache Cassandra SAI fixes on DataStax main-5.0.">
 <title>SAI Audit Report</title>
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -129,23 +129,23 @@ dl.gloss { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:
   <a class="home" href="../">AI review guides</a>
   <ol>
     <li><a href="./">← Review guide</a></li>
-    <li><a href="overview.html">← Why this work</a></li>
+    <li><a href="overview.html">← Overview</a></li>
     <li><a href="#summary">Summary</a></li>
-    <li><a href="#base">Mainline and Apache</a></li>
-    <li><a href="#fixes">Apache fixes</a></li>
-    <li><a href="#series">The series</a></li>
+    <li><a href="#base">Base branches</a></li>
+    <li><a href="#fixes">Apache SAI commits</a></li>
+    <li><a href="#series">Series commits</a></li>
     <li><a href="#ci">CI evidence</a></li>
-    <li><a href="#mainline">Mainline fixes</a></li>
+    <li><a href="#mainline">Mainline fixes outside the series</a></li>
     <li><a href="#perf">Performance</a></li>
-    <li><a href="#bugs">New bugs</a></li>
-    <li><a href="#residuals">Residuals</a></li>
+    <li><a href="#bugs">Filed issues</a></li>
+    <li><a href="#residuals">Open items</a></li>
     <li><a href="#glossary">Glossary</a></li>
   </ol>
 </nav>
 <main>
 <header class="top" id="summary">
   <div class="eyebrow">DataStax main-5.0 · SAI · audit report · 2026-11-19, commit IDs updated 2026-11-25</div>
-  <h1>Which Apache SAI fixes main-5.0 was missing, and what restores them</h1>
+  <h1>Audit report: Apache SAI fixes on DataStax main-5.0</h1>
   <p class="lede">This audit checked every Apache cassandra-5.0 and trunk SAI commit by behaviour against DataStax's 5.0 line (branch <code>main</code>, called main-5.0 here), restored the ones that apply in a 107-commit series on top of mainline, and filed the bugs it found.</p>
   <p class="dim">Commit IDs on this page are those of the DataStax branch <code>main-5.0-fb7f1b7aee-merge</code> ("mainline") at <a href="https://github.com/JeremiahDJordan/cassandra/commit/5458f446c35ac71f2dc0ad68dc69f8130661301f"><code>5458f446c35</code></a>, published on the fork as <a href="https://github.com/JeremiahDJordan/cassandra/tree/in-progress/main-5.0-fb7f1b7aee-merge">in-progress/main-5.0-fb7f1b7aee-merge</a>; each ID links to its commit there. Issue and PR numbers refer to the public fork <a href="https://github.com/JeremiahDJordan/cassandra">JeremiahDJordan/cassandra</a>; commits that are only on Apache's branches link to <a href="https://github.com/apache/cassandra">apache/cassandra</a>.</p>
   <div class="tiles">
@@ -161,12 +161,12 @@ dl.gloss { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:
   </dl>
 </header>
 <section id="base">
-  <h2>Mainline and Apache since the audit</h2>
+  <h2>Base branches</h2>
   <p>Mainline is <code>main-5.0-fb7f1b7aee-merge</code>: main-5.0 <a href="https://github.com/JeremiahDJordan/cassandra/commit/5141da547d7783f5565ea77a9dda965a6c67d12d"><code>5141da547d7</code></a> merged with Apache cassandra-5.0 <a href="https://github.com/JeremiahDJordan/cassandra/commit/fb7f1b7aeebb9565305aad76025530dc30f697fb"><code>fb7f1b7aee</code></a> as <a href="https://github.com/JeremiahDJordan/cassandra/commit/f12250ca21c7f8811a3fff2b0712a04e7696c631"><code>f12250ca21c</code></a>, then 95 numbered commits, the two unrepaired-tombstone fixes, the series and later fixes. Its history has been rewritten; commit IDs from before 2026-11-25 may not resolve.</p>
   <p>Since the audit's base, Apache cassandra-5.0 has moved 8 commits, to <a href="https://github.com/apache/cassandra/commit/5f11d4bd5c27b1b9c711efb43fc15dda6b643065"><code>5f11d4bd5c2</code></a>. The only new SAI commit is CASSANDRA-21863. Series commit 093 handles its case differently: it evaluates per element the frozen-collection <code>CONTAINS</code> queries that 21863 rejects (a maintainer decision). Apache's tests for its other fixes, adapted, pass on mainline; its part for <code>IN</code> and <code>BETWEEN</code> targets applies only to 6.0.</p>
 </section>
 <section id="fixes">
-  <h2>Every Apache fix, classified</h2>
+  <h2>Apache SAI commits</h2>
   <p>A behavioural re-check took every Apache cassandra-5.0 and trunk SAI commit the audit had classified, plus 10 that had never been classified, and tested each one against the series. It found 13 gaps; follow-up fixes then fixed or documented all 13. It also checked the merge's 27 SAI-path hunks: 21 confirmed, 4 gaps (now fixed or documented), 1 not applicable and 1 checked by reading only.</p>
   <div class="bar" role="img" aria-label="Classification of 220 commits">
     <i class="c-restored" style="flex: 34; background: var(--accent)"></i>
@@ -182,15 +182,15 @@ dl.gloss { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:
     <span class="c-deviation">Documented deviation · 4</span>
     <span class="c-deferred">Deferred · 5</span>
   </div>
-  <h3>Maintainer decisions that shape the classification</h3>
+  <h3>Decisions</h3>
   <ul>
-    <li><strong>Deferred until DataStax moves to a 6.0-based branch:</strong> BETWEEN (19604, 19688, 19878, and 20154 with them) and 18492.</li>
+    <li><strong>Deferred to a 6.0-based branch:</strong> BETWEEN (19604, 19688, 19878, and 20154 with them) and 18492.</li>
     <li><strong>Strict filtering:</strong> replica filtering defaults to strict. 19018's relaxed semantics are restored behind an opt-in switch.</li>
     <li><strong>18490</strong> is restored with its default ON.</li>
     <li><strong>21863:</strong> series 093 evaluates <code>CONTAINS</code>, <code>CONTAINS KEY</code> and their negations on unindexed frozen collections per element during SAI post-filtering; Apache rejects that case.</li>
     <li><strong>The virtual table</strong> is registered under Apache's name, <code>sai_sstable_index_segments</code>.</li>
     <li><strong>Filtered IN:</strong> a null element of a filtered single-column IN is ignored, as in Apache 5.0. Series commit 052 reverses that part of mainline commit <a href="https://github.com/JeremiahDJordan/cassandra/commit/eecce01e0fe8d2fc0f32744fe6b4be8ef84014fc"><code>eecce01e0fe</code></a>.</li>
-    <li><strong>Kept as documented deviations:</strong>
+    <li><strong>Documented deviations:</strong>
       <ul>
         <li>18730, the vector dimension guardrail default;</li>
         <li>20334, <code>prioritize_over_legacy_index</code> defaulting to true;</li>
@@ -200,7 +200,7 @@ dl.gloss { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:
     </li>
   </ul>
   <div class="tools" data-for="t-fixes">
-    <input type="search" id="q-fixes" placeholder="Filter by ticket, title or commit" aria-label="Filter Apache fixes">
+    <input type="search" id="q-fixes" placeholder="Filter by ticket, title or commit" aria-label="Filter Apache SAI commits">
     <button class="chip" data-k="all" aria-pressed="true">All</button>
     <button class="chip" data-k="restored" aria-pressed="false">Restored</button>
     <button class="chip" data-k="present" aria-pressed="false">Present</button>
@@ -215,7 +215,7 @@ dl.gloss { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:
   </table></div>
 </section>
 <section id="series">
-  <h2>The series: 107 commits</h2>
+  <h2>Series commits (107)</h2>
   <p>The series restores the Apache fixes and fixes DataStax SAI bugs the audit found in the same code. Each commit's test evidence is in the table. In 22 rows a test failed with the earlier production code and passed with the fix (for 025b, the tests it adds for 025; in some rows, a named part of the fix). The rest record the commit's own test run, the run of its group of fixes, or no tests for documentation.</p>
   <div class="tools" data-for="t-series">
     <input type="search" id="q-series" placeholder="Filter by subject or ticket" aria-label="Filter series commits">
@@ -234,7 +234,7 @@ dl.gloss { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:
   <h2>CI evidence</h2>
   <p>All runs used local CI on JDK 11. The table shows the last builds of the series; the table after it lists every failure seen in these and earlier builds. The last column is a run of mainline of the same day, where one ran. The earlier builds numbered 025 and 025b as one commit.</p>
   <div class="frame short"><table>
-    <thead><tr><th>Build of the series</th><th>Lint</th><th>Per-commit tests</th><th>SAI sweep, default</th><th>SAI sweep, ga</th><th>Full unit + in-JVM dtests</th><th>Mainline baseline</th></tr></thead>
+    <thead><tr><th>Series build</th><th>Lint</th><th>Per-commit tests</th><th>SAI sweep, default</th><th>SAI sweep, ga</th><th>Full unit + in-JVM dtests</th><th>Mainline baseline</th></tr></thead>
     <tbody>
     
     
@@ -244,7 +244,7 @@ dl.gloss { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:
     <tr><td class="note"><strong>Published tip</strong> (<a href="https://github.com/JeremiahDJordan/cassandra/commit/5458f446c35ac71f2dc0ad68dc69f8130661301f"><code>5458f446c35</code></a>, the series and later commits)</td><td class="note">-</td><td class="note">-</td><td class="note">-</td><td class="note">-</td><td class="note">40,906 unit (277 skipped) + 2,615 dtests (23 skipped), 0 test failures</td><td class="note">-</td></tr>
     </tbody>
   </table></div>
-  <h3>Every failure seen, and what it was</h3>
+  <h3>CI failures</h3>
   <div class="frame short"><table>
     <thead><tr><th>Failure</th><th>Disposition</th></tr></thead>
     <tbody>
@@ -267,7 +267,7 @@ dl.gloss { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:
   <p class="dim">Not run: python dtests, JDK 17 and 21, the full pre-commit profile.</p>
 </section>
 <section id="mainline">
-  <h2>Fixes that went straight to mainline</h2>
+  <h2>Mainline fixes outside the series</h2>
   <p>Fixes the audit found in mainline's own code, or that belong there, landed as numbered mainline commits:</p>
   <dl class="kv">
     <dt><a href="https://github.com/JeremiahDJordan/cassandra/commit/0c88ef824180d2f31202cce040d0c591f065a590"><code>0c88ef82418</code></a></dt><dd>Skip-list memtables no longer report the 2015 encoding epoch as their min local deletion time. This is a prerequisite for performance fix 01.</dd>
@@ -284,10 +284,10 @@ dl.gloss { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:
   </dl>
 </section>
 <section id="perf">
-  <h2>Performance work</h2>
+  <h2>Performance</h2>
   <p>A review of the read and write hot paths of the merge, of mainline after the merge and of the series found 21 items worth acting on. Nothing the merge itself wrote is a measurable regression. The fixes went into mainline and the series, and into the open fork PRs that carry the same code.</p>
   <div class="frame short"><table>
-    <thead><tr><th>#</th><th>Issue (where)</th><th>Measured before</th><th>Fix and where it landed</th><th>Effect</th></tr></thead>
+    <thead><tr><th>#</th><th>Issue (where)</th><th>Measured before</th><th>Fix</th><th>Effect</th></tr></thead>
     <tbody>
     <tr><td class="mono">01</td><td class="note">Reads naming columns kept, merged, then dropped older cells (<code>ReadCommand#withoutSkippableCells</code>)</td><td class="note">range reads +32 to +76%; with an expired SSTable in view +26 to +72%; memtable +7 to +22%; other rows +3 to +11%</td><td class="note">part of the mainline commit of the original fix (<a href="https://github.com/JeremiahDJordan/cassandra/commit/f79aaa52323e8a1f202fa8823e8b967dd2a99f63"><code>f79aaa52323</code></a>); prerequisite skip-list min local deletion time fix <a href="https://github.com/JeremiahDJordan/cassandra/commit/0c88ef824180d2f31202cce040d0c591f065a590"><code>0c88ef82418</code></a></td><td class="note">range reads from SSTables back at main-5.0's speed (−10% to +19% against it, within noise); −16% to −52% against before the fix (40-column skip-list SSTable reads −52%/−44%); allocation −13% to −19%</td></tr>
     <tr><td class="mono">02</td><td class="note">A partition wrapper per filtered partition (<code>RowFilter#withRowsOrNull</code>, series 055)</td><td class="note">up to 8% of allocation and 4% of time of a filtering scan</td><td class="note">part of series 055</td><td class="note">filtering scan −8.3% bytes per operation</td></tr>
@@ -306,7 +306,7 @@ dl.gloss { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:
     <li><strong>Compaction had lost its compressed read-ahead</strong>, in the CNDB-10115 rebase (<a href="https://github.com/JeremiahDJordan/cassandra/commit/13fbc45e54b2e3011ae57a2985a27a336cc82cc6"><code>13fbc45e54b</code></a>) and in CNDB-13639 (<a href="https://github.com/JeremiahDJordan/cassandra/commit/c80a76cbf41dedec9c76fcaefc3a3b24d82a37d0"><code>c80a76cbf41</code></a>). The fix is on mainline (<a href="https://github.com/JeremiahDJordan/cassandra/commit/effeeb15e43f5bfe046b49d0a3b10ba2b67c9f98"><code>effeeb15e43</code></a>); end-to-end compaction ran 25–30% faster with a small kernel read-ahead. Fork #441/#442.</li>
     <li><strong>Full-file passes went through the chunk cache.</strong> Fixed on mainline (<a href="https://github.com/JeremiahDJordan/cassandra/commit/4ee9a6be339fc77fac26494076b0543c24b85d47"><code>4ee9a6be339</code></a>) and in series 104: SAI builds 17–55% faster, with little eviction of base reads (BTI miss rate 10% → 12–14% briefly).</li>
   </ul>
-  <h3>Fork PRs updated with the fixes</h3>
+  <h3>Updated fork PRs</h3>
   <div class="frame short"><table>
     <thead><tr><th>PR</th><th>Fix</th><th>Measured result</th></tr></thead>
     <tbody>
@@ -326,7 +326,7 @@ dl.gloss { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:
   <p>Fix 01 brings range reads from SSTables back to main-5.0's speed. Memtable reads stay slower than on main-5.0 (<a href="https://github.com/JeremiahDJordan/cassandra/commit/5141da547d7783f5565ea77a9dda965a6c67d12d"><code>5141da547d7</code></a>), by 6% to 128% (40-column skip-list tables the most), and reads with an SSTable holding expired data by 23% to 94%. That is the cost of the correctness fix itself (<a href="https://github.com/JeremiahDJordan/cassandra/commit/8b535907ba16ddc357f156ba0688e878481f8232"><code>8b535907ba1</code></a>): a row kept alive by cells older than its expired row marker must not be dropped. Memtable-only reads against the code before fix 01 are within noise. On the Apache side (#158), memtable-only reads are still 77–141% slower.</p>
 </section>
 <section id="bugs">
-  <h2>New bugs and where they're filed</h2>
+  <h2>Filed issues</h2>
   <p>Bugs in released code were filed on the fork: Apache 4.0 to trunk, and main-5.0 and main-4.0. Each was checked for duplicates and has 1–3 JIRA component labels.</p>
   <ul>
     <li><strong>DataStax bugs</strong> get <code>datastax/issue-N-5.0</code> and <code>-4.0</code> PRs into <code>datastax/base-5.0</code> and <code>datastax/base-4.0</code> (copies of DataStax <code>main</code> and <code>main-4.0</code>).</li>
@@ -356,7 +356,7 @@ dl.gloss { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:
   <p class="dim">Besides the bugs: 7 performance and 3 documentation issues. #90 and #129 existed before the audit; the audit added evidence to them as comments. States are as of 2026-11-22.</p>
 </section>
 <section id="residuals">
-  <h2>Residuals and open items</h2>
+  <h2>Open items</h2>
   <p class="dim">As of 2026-11-19, with later changes noted.</p>
   <div class="frame short"><table>
     <thead><tr><th>Item</th><th>Status and evidence</th></tr></thead>
@@ -371,8 +371,8 @@ dl.gloss { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:
     <tr><td class="nowrap-sm"><strong>#211, #212, #213</strong></td><td class="note">Vector graph reachability, a <code>rerank_k</code> 0 NullPointerException, and open-ended collection slices (#213 = CASSANDRA-17403): filed, no PR.</td></tr>
     <tr><td class="nowrap-sm"><strong>#277</strong></td><td class="note">After <code>ALTER TYPE</code>, SAI indexes keep the original type: raised to critical, no PR.</td></tr>
     <tr><td class="nowrap-sm"><strong>Selected filed issues without a PR</strong></td><td class="note">#198, #201, #204, #228, #239 (a 6,000-line fix that needs the 5.0 merge), #242, #240/#241, #278, #281, #370, #371, #376, #378, #381, #382 (high: <code>CREATE INDEX</code> silently queryable with 0 of 3,200 rows on main-5.0), #430 (mixed versions, <code>skipTo</code>).</td></tr>
-    <tr><td class="nowrap-sm"><strong>Other gaps on the released lines</strong></td><td class="note">Filed as #459–#471 and #502–#504; their PRs are in the New bugs table. #503/#504 (SAI compared inet values as IPv6 while filtering compares raw bytes) is fixed in the series by 105 (<a href="https://github.com/JeremiahDJordan/cassandra/commit/e62738daee62928ddace6dbedc869bf5010c8df1"><code>e62738daee6</code></a>). The <code>{}</code> literal for a descending frozen map clustering column threw ClassCastException on all lines, Apache 5.0 too (fixed on mainline by <a href="https://github.com/JeremiahDJordan/cassandra/commit/b7a5f552ab933949691c7472eec6aad9105c0e2c"><code>b7a5f552ab9</code></a>). Not filed: one validation the released lines don't have, two NEWS-only items (one of them the 21515 deviation), and one feature.</td></tr>
-    <tr><td class="nowrap-sm"><strong>Analyzer residual</strong></td><td class="note">A replica that knows the named index but still has an older, differently analyzed <code>:</code> index on the column plans <code>:</code> with the old one and can return other rows. Pre-existing, documented.</td></tr>
+    <tr><td class="nowrap-sm"><strong>Other gaps on the released lines</strong></td><td class="note">Filed as #459–#471 and #502–#504; their PRs are in the Filed issues table. #503/#504 (SAI compared inet values as IPv6 while filtering compares raw bytes) is fixed in the series by 105 (<a href="https://github.com/JeremiahDJordan/cassandra/commit/e62738daee62928ddace6dbedc869bf5010c8df1"><code>e62738daee6</code></a>). The <code>{}</code> literal for a descending frozen map clustering column threw ClassCastException on all lines, Apache 5.0 too (fixed on mainline by <a href="https://github.com/JeremiahDJordan/cassandra/commit/b7a5f552ab933949691c7472eec6aad9105c0e2c"><code>b7a5f552ab9</code></a>). Not filed: one validation the released lines don't have, two NEWS-only items (one of them the 21515 deviation), and one feature.</td></tr>
+    <tr><td class="nowrap-sm"><strong>Analyzer mismatch</strong></td><td class="note">A replica that knows the named index but still has an older, differently analyzed <code>:</code> index on the column plans <code>:</code> with the old one and can return other rows. Pre-existing, documented.</td></tr>
     <tr><td class="nowrap-sm"><strong>Strict filtering by default</strong></td><td class="note">A refused attempt counts as a read failure; the remaining-deadline handling of the retry is accepted as it is; <code>LOCAL_*</code> reads relax for up to 1 s after a remote refusal (cost only); a DataStax coordinator from before 5.0.10, pinned below DS 10 (100) and reporting a 3-part release version, is taken for Apache (only with downstream <code>Nodes</code> implementations).</td></tr>
     <tr><td class="nowrap-sm"><strong>Schema exchange with builds before 5.0.10</strong></td><td class="note">For DataStax messaging version 111, NEWS recommends the two-step pinned upgrade (<code>-Dds.current_messaging_version=110</code>, then unpin).</td></tr>
     <tr><td class="nowrap-sm"><strong>CNDB memtables</strong></td><td class="note">No CNDB memtable with the old 4-argument <code>addAll</code>, atomic apply and SAI was found; each rebuild now flushes first, which has a cost. CNDB memtables need a check.</td></tr>

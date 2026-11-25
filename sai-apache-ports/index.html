@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SAI Port Review Guide</title>
-<meta name="description" content="How to review the Apache Cassandra SAI fixes restored on DataStax main-5.0: where to start, what each area changes, what to check.">
+<meta name="description" content="Review guide for the Apache Cassandra SAI fixes restored on DataStax main-5.0: priority commits, changes by area, and review checks.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
 <style>
@@ -52,7 +52,7 @@ td code { white-space: nowrap; }
 em { color: var(--muted); }
 pre.mermaid { margin: 16px 0; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
   overflow-x: auto; text-align: center; font-family: var(--font-body); }
-#appendix-every-commit ~ .tbl { max-height: 85vh; overflow: auto; }
+#commit-list ~ .tbl { max-height: 85vh; overflow: auto; }
 .split { display: flex; height: 22px; border-radius: 6px; overflow: hidden; margin: 18px 0 8px; gap: 2px; }
 .legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13.5px; color: var(--muted); margin: 0 0 16px; }
 .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; background: var(--c); }
@@ -68,7 +68,7 @@ pre.mermaid { margin: 16px 0; padding: 16px; background: var(--surface); border:
   .tbl { max-height: 85vh; }
   th, td { padding: 8px 6px; }
   td code { white-space: normal; }
-  td a code, #appendix-every-commit ~ .tbl td code { white-space: nowrap; }
+  td a code, #commit-list ~ .tbl td code { white-space: nowrap; }
   td:nth-child(2):last-child { overflow-wrap: anywhere; }
   main { padding: 20px 16px 32px; }
   h1 { font-size: 26px; }
@@ -80,17 +80,17 @@ pre.mermaid { margin: 16px 0; padding: 16px; background: var(--surface); border:
 <nav class="toc" aria-label="Contents">
 <a class="home" href="../">AI review guides</a>
 <ol>
-<li><a class="s" href="#the-change-under-review">The change under review</a></li>
+<li><a class="s" href="#summary">Summary</a></li>
 <li><a class="s" href="#scope">Scope</a></li>
-<li><a class="s" href="#how-to-review-a-commit">How to review a commit</a></li>
-<li><a class="s" href="#where-to-start">Where to start</a></li>
-<li><a class="s" href="#decisions-already-made">Decisions already made</a></li>
-<li><a class="s" href="#the-commits-by-area">The commits by area</a></li>
-<li><a class="s" href="#later-commits-on-the-same-code">Later commits on the same code</a></li>
+<li><a class="s" href="#commit-review">Commit review</a></li>
+<li><a class="s" href="#priority-commits">Priority commits</a></li>
+<li><a class="s" href="#decisions">Decisions</a></li>
+<li><a class="s" href="#commits-by-area">Commits by area</a></li>
+<li><a class="s" href="#later-commits">Later commits</a></li>
 <li><a class="s" href="#evidence">Evidence</a></li>
-<li><a class="s" href="#using-this-guide-with-an-ai-reviewer">Using this guide with an AI reviewer</a></li>
-<li><a class="s" href="#appendix-every-commit">Appendix: every commit</a></li>
-<li><a class="s" href="overview.html">Why this work &rarr;</a></li>
+<li><a class="s" href="#ai-reviewer-instructions">AI reviewer instructions</a></li>
+<li><a class="s" href="#commit-list">Commit list</a></li>
+<li><a class="s" href="overview.html">Overview &rarr;</a></li>
 <li><a class="s" href="audit-report.html">Audit report &rarr;</a></li>
 </ol>
 </nav>
@@ -100,7 +100,7 @@ pre.mermaid { margin: 16px 0; padding: 16px; background: var(--surface); border:
 fixes into DataStax's Cassandra 5.0 line. The <a href="overview.html">overview</a> says on one page what main-5.0 was missing; the
 <a href="audit-report.html">audit report</a> has the full classification of every Apache SAI commit, the test evidence and the
 bugs filed.</p>
-<h2 id="the-change-under-review">The change under review</h2>
+<h2 id="summary">Summary</h2>
 <ul>
 <li><strong>Branch:</strong> <code>main-5.0-fb7f1b7aee-merge</code> (mainline in this guide): DataStax's 5.0 line (main-5.0, branch <code>main</code> of
 datastax/cassandra) merged with Apache <code>cassandra-5.0</code> at <a href="https://github.com/JeremiahDJordan/cassandra/commit/fb7f1b7aeebb9565305aad76025530dc30f697fb"><code>fb7f1b7aee</code></a>, published as
@@ -124,9 +124,9 @@ numbering fix (<a href="https://github.com/JeremiahDJordan/cassandra/commit/925e
 documented deviations and 5 are deferred.</li>
 <li>Many commits fix DataStax-only bugs in the same code. The restored fixes and their tests depend on them.</li>
 </ol>
-<h2 id="how-to-review-a-commit">How to review a commit</h2>
+<h2 id="commit-review">Commit review</h2>
 <ul>
-<li><strong>The message is the specification.</strong> Each message says what was wrong, why, and what changed, with a reproducer
+<li><strong>Commit message.</strong> Each message specifies what was wrong, why, and what changed, with a reproducer
 in plain CQL where there is one. Check the code against the message, then the message against the code: a
 behaviour the code changes that the message doesn't mention is a finding.</li>
 <li><strong>Provenance lines</strong> at the end of a message name the upstream source:
@@ -154,14 +154,14 @@ the message names.</li>
 <li><strong>Edge cases off the intended use</strong> are refused with a clear error or documented, not handled with extra
 mechanisms.</li>
 </ol>
-<h2 id="where-to-start">Where to start</h2>
+<h2 id="priority-commits">Priority commits</h2>
 <p>Review the commits with compatibility or concurrency impact first. A bug in these is hard to undo once released:</p>
 <div class="tbl"><table>
 <thead>
 <tr>
 <th>Commit</th>
-<th>Why it matters</th>
-<th>Check first</th>
+<th>Impact</th>
+<th>Checks</th>
 </tr>
 </thead>
 <tbody>
@@ -222,7 +222,7 @@ mechanisms.</li>
 </tr>
 </tbody>
 </table></div>
-<h2 id="decisions-already-made">Decisions already made</h2>
+<h2 id="decisions">Decisions</h2>
 <p>A review should check that the code and the documentation agree with these, not reopen them:</p>
 <ul>
 <li><strong>Replica filtering stays strict by default.</strong> CASSANDRA-19018's relaxed filtering is restored behind
@@ -238,11 +238,11 @@ during SAI post-filtering; CASSANDRA-21863 rejects that case.</li>
 accepted on primary key columns, have no effect there, and warn for non-default values) and CASSANDRA-21515 (a
 full rebuild of one index rewrites the shared per-SSTable components).</li>
 <li><strong>Deferred to a 6.0-based line:</strong> <code>BETWEEN</code> (CASSANDRA-19604, 19688, 19878, 20154) and CASSANDRA-18492.</li>
-<li><strong>Read, not written:</strong> these commits read Apache's <code>aa</code> format through a read-only version; nothing in them writes
+<li><strong>Read-only Apache <code>aa</code> format:</strong> these commits read Apache's <code>aa</code> format through a read-only version; nothing in them writes
 it.</li>
 </ul>
-<h2 id="the-commits-by-area">The commits by area</h2>
-<p>The <a href="#appendix-every-commit">appendix</a> lists all 107 commits in branch order with their sources and tests. The
+<h2 id="commits-by-area">Commits by area</h2>
+<p>The <a href="#commit-list">commit list</a> gives all 107 commits in branch order with their sources and tests. The
 same commits by area, with the area numbers showing where each area acts:</p>
 <pre class="mermaid">flowchart LR
     CL[&quot;Client query&quot;] --&gt; CO[&quot;Coordinator: what to send&lt;br/&gt;to which nodes (1), limits,&lt;br/&gt;short read and replica&lt;br/&gt;filtering protection (6)&quot;]
@@ -456,7 +456,7 @@ compaction and expiration read such an SSTable only when an index asks; SAI does
 Cassandra 5.0), <a href="https://github.com/JeremiahDJordan/cassandra/commit/b249e01ec2928948c34cc7997db766260304ae51"><code>b249e01ec29</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/72d4f619b3a5aa022d4ff34837fe0054047de44a"><code>72d4f619b3a</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/c0a17e8c373463dd30bdb174b7de0a2731b1a1c9"><code>c0a17e8c373</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/79838eeeace5fe3b7facabc7264d5214bbe608fe"><code>79838eeeace</code></a>, and <a href="https://github.com/JeremiahDJordan/cassandra/commit/7315a1b014e5560db71070b3e2f5c9fb93edc781"><code>7315a1b014e</code></a>, which registers the
 SAI segments virtual table under the name tools written for Apache Cassandra expect.</p>
 <p>Check that each documented difference matches the code.</p>
-<h2 id="later-commits-on-the-same-code">Later commits on the same code</h2>
+<h2 id="later-commits">Later commits</h2>
 <p>These commits on mainline after the series, up to <a href="https://github.com/JeremiahDJordan/cassandra/commit/5458f446c35ac71f2dc0ad68dc69f8130661301f"><code>5458f446c35</code></a>, change the index code, <code>RowFilter</code>, what is sent to
 older nodes, a test this guide names, or the harness for testing with Apache Cassandra nodes. Read each with the
 series commit it changes:</p>
@@ -620,17 +620,17 @@ filter can miss one row, which brute force finds. <a href="https://github.com/Je
 </ul>
 <p>The <a href="audit-report.html">audit report</a> has the per-run numbers, every failure seen and its cause, and the issues filed
 for bugs that aren't fixed here.</p>
-<h2 id="using-this-guide-with-an-ai-reviewer">Using this guide with an AI reviewer</h2>
+<h2 id="ai-reviewer-instructions">AI reviewer instructions</h2>
 <p>Give the reviewer one commit, or one area above, at a time, with:</p>
 <ol>
 <li>the commit (<code>git show &lt;sha&gt;</code>) and, for an adapted commit, the Apache commit from its provenance line;</li>
-<li>the &quot;Check&quot; list of its area and the <a href="#how-to-review-a-commit">checks for every commit</a>;</li>
+<li>the &quot;Check&quot; list of its area and the <a href="#commit-review">checks for every commit</a>;</li>
 <li>the instruction to report each finding with a severity (blocker, should fix, nit), the file and line, a concrete
 failing case, and a suggested fix, and to say plainly when it found nothing.</li>
 </ol>
 <p>Then triage: fix correctness, data loss and missing tests; decline style preferences and pre-existing issues outside
 the commit with a one-line reason, and file those separately if they are real bugs.</p>
-<h2 id="appendix-every-commit">Appendix: every commit</h2>
+<h2 id="commit-list">Commit list</h2>
 <p>In branch order; <a href="https://github.com/JeremiahDJordan/cassandra/commit/1d5c08a0ffbf5d0e821e6609420a6bdade3c23e6"><code>1d5c08a0ffb</code></a> landed before the range. <code>#</code> is the commit's number in the audit report's series
 table. &quot;Port of&quot; with a commit link means the message carries an <code>Adapted from</code> line for that source; &quot;Tests from&quot;
 means only the tests came from it. A source without a commit link is named in the message text only.</p>

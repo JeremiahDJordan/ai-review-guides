@@ -7,7 +7,7 @@ fixes into DataStax's Cassandra 5.0 line. The [overview](https://jeremiahdjordan
 [audit report](https://jeremiahdjordan.github.io/ai-review-guides/sai-apache-ports/audit-report.html) has the full classification of every Apache SAI commit, the test evidence and the
 bugs filed.
 
-## The change under review
+## Summary
 
 - **Branch:** `main-5.0-fb7f1b7aee-merge` (mainline in this guide): DataStax's 5.0 line (main-5.0, branch `main` of
   datastax/cassandra) merged with Apache `cassandra-5.0` at [`fb7f1b7aee`](https://github.com/JeremiahDJordan/cassandra/commit/fb7f1b7aeebb9565305aad76025530dc30f697fb), published as
@@ -31,9 +31,9 @@ bugs filed.
    documented deviations and 5 are deferred.
 2. Many commits fix DataStax-only bugs in the same code. The restored fixes and their tests depend on them.
 
-## How to review a commit
+## Commit review
 
-- **The message is the specification.** Each message says what was wrong, why, and what changed, with a reproducer
+- **Commit message.** Each message specifies what was wrong, why, and what changed, with a reproducer
   in plain CQL where there is one. Check the code against the message, then the message against the code: a
   behaviour the code changes that the message doesn't mention is a finding.
 - **Provenance lines** at the end of a message name the upstream source:
@@ -61,11 +61,11 @@ Check in every commit:
 5. **Edge cases off the intended use** are refused with a clear error or documented, not handled with extra
    mechanisms.
 
-## Where to start
+## Priority commits
 
 Review the commits with compatibility or concurrency impact first. A bug in these is hard to undo once released:
 
-| Commit | Why it matters | Check first |
+| Commit | Impact | Checks |
 |---|---|---|
 | [`59001b61e92`](https://github.com/JeremiahDJordan/cassandra/commit/59001b61e92050ec884b5ecadf05ea2e13f0f330) Reject DataStax-only row filter features in queries that can reach Apache Cassandra nodes | Decides which queries are refused in a mixed cluster | Which nodes a query "can reach" per consistency level; the cache of the peer check and every event that invalidates it; that `:` is sent as `=` only where that is the same query |
 | [`331dd77ba02`](https://github.com/JeremiahDJordan/cassandra/commit/331dd77ba029ff8154ca46fdf102e48dee2fb685) Support LIKE restrictions in filtering queries | Introduces messaging version DS 21 (111), announced but not used for serialization | Every place that compares versions: schema pull and push, `PrepareMessage`, `Batch`, serialized-size caches. Downgrade: is anything written in DS 21? |
@@ -79,7 +79,7 @@ Review the commits with compatibility or concurrency impact first. A bug in thes
 | [`998ea989cb5`](https://github.com/JeremiahDJordan/cassandra/commit/998ea989cb55bc629f936943c6786fb704f00f77) Index map entries, frozen values and varints in canonical form in SAI | New term encoding for some values | Old indexes are still searched with values as written; size checks use the canonical size |
 | [`817347ca894`](https://github.com/JeremiahDJordan/cassandra/commit/817347ca894d56d8dc9f8608e76a93047dd4359b) Fail a read that only an unknown index can serve as an index not available | Read path on replicas that don't know an index yet | Equality falls back to filtering; a full-primary-key `:` read uses the analyzer if it has one; other reads that need an unavailable index, and reads whose index hint includes one, fail with "index not available", never an internal error |
 
-## Decisions already made
+## Decisions
 
 A review should check that the code and the documentation agree with these, not reopen them:
 
@@ -96,12 +96,12 @@ A review should check that the code and the documentation agree with these, not 
   accepted on primary key columns, have no effect there, and warn for non-default values) and CASSANDRA-21515 (a
   full rebuild of one index rewrites the shared per-SSTable components).
 - **Deferred to a 6.0-based line:** `BETWEEN` (CASSANDRA-19604, 19688, 19878, 20154) and CASSANDRA-18492.
-- **Read, not written:** these commits read Apache's `aa` format through a read-only version; nothing in them writes
+- **Read-only Apache `aa` format:** these commits read Apache's `aa` format through a read-only version; nothing in them writes
   it.
 
-## The commits by area
+## Commits by area
 
-The [appendix](#appendix-every-commit) lists all 107 commits in branch order with their sources and tests. The
+The [commit list](#commit-list) gives all 107 commits in branch order with their sources and tests. The
 same commits by area, with the area numbers showing where each area acts:
 
 ```mermaid
@@ -355,7 +355,7 @@ SAI segments virtual table under the name tools written for Apache Cassandra exp
 
 Check that each documented difference matches the code.
 
-## Later commits on the same code
+## Later commits
 
 These commits on mainline after the series, up to [`5458f446c35`](https://github.com/JeremiahDJordan/cassandra/commit/5458f446c35ac71f2dc0ad68dc69f8130661301f), change the index code, `RowFilter`, what is sent to
 older nodes, a test this guide names, or the harness for testing with Apache Cassandra nodes. Read each with the
@@ -413,19 +413,19 @@ series commit it changes:
 The [audit report](https://jeremiahdjordan.github.io/ai-review-guides/sai-apache-ports/audit-report.html) has the per-run numbers, every failure seen and its cause, and the issues filed
 for bugs that aren't fixed here.
 
-## Using this guide with an AI reviewer
+## AI reviewer instructions
 
 Give the reviewer one commit, or one area above, at a time, with:
 
 1. the commit (`git show <sha>`) and, for an adapted commit, the Apache commit from its provenance line;
-2. the "Check" list of its area and the [checks for every commit](#how-to-review-a-commit);
+2. the "Check" list of its area and the [checks for every commit](#commit-review);
 3. the instruction to report each finding with a severity (blocker, should fix, nit), the file and line, a concrete
    failing case, and a suggested fix, and to say plainly when it found nothing.
 
 Then triage: fix correctness, data loss and missing tests; decline style preferences and pre-existing issues outside
 the commit with a one-line reason, and file those separately if they are real bugs.
 
-## Appendix: every commit
+## Commit list
 
 In branch order; [`1d5c08a0ffb`](https://github.com/JeremiahDJordan/cassandra/commit/1d5c08a0ffbf5d0e821e6609420a6bdade3c23e6) landed before the range. `#` is the commit's number in the audit report's series
 table. "Port of" with a commit link means the message carries an `Adapted from` line for that source; "Tests from"
