@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAI Port Overview</title>
+<meta name="description" content="What DataStax main-5.0 was missing from Apache Cassandra's SAI fixes, and what the series restores.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --fg: #1b2230; --muted: #5a6478; --line: #dde2ea;
+  --accent: #1f6f8b; --accent-soft: #e2f0f5; --code-bg: #eef1f5;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-head: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d; --surface: #191f28; --fg: #e3e8f0; --muted: #9aa5b8; --line: #2b3442;
+    --accent: #6cc3dd; --accent-soft: #173341; --code-bg: #222a36; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d; --surface: #191f28; --fg: #e3e8f0; --muted: #9aa5b8; --line: #2b3442;
+  --accent: #6cc3dd; --accent-soft: #173341; --code-bg: #222a36; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-padding-top: 16px; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.65 var(--font-body); }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 28px 16px 64px;
+  display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 40px; }
+nav.toc { position: sticky; top: 20px; align-self: start; font-size: 13.5px; }
+nav.toc .home { display: block; margin-bottom: 14px; font: 500 12px/1 var(--font-mono); letter-spacing: .06em;
+  text-transform: uppercase; color: var(--accent); text-decoration: none; }
+nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+nav.toc a.s { color: var(--muted); text-decoration: none; display: block; padding: 3px 10px; border-left: 2px solid var(--line); }
+nav.toc a.s:hover, nav.toc a.s:focus-visible { color: var(--accent); border-left-color: var(--accent); }
+main { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 28px 36px 40px; }
+h1 { font: 600 32px/1.2 var(--font-head); margin: 0 0 16px; text-wrap: balance; }
+h2 { font: 600 23px/1.25 var(--font-head); margin: 40px 0 12px; padding-top: 18px; border-top: 1px solid var(--line); }
+h3 { font: 600 17px/1.3 var(--font-head); margin: 28px 0 8px; }
+p, li { max-width: 78ch; }
+a { color: var(--accent); }
+code { font: 13px/1.4 var(--font-mono); background: var(--code-bg); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+.tbl { overflow-x: auto; margin: 14px 0; border: 1px solid var(--line); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+th { background: var(--accent-soft); font-weight: 600; position: sticky; top: 0; }
+tr:last-child td { border-bottom: 0; }
+td code { white-space: nowrap; }
+em { color: var(--muted); }
+pre.mermaid { margin: 16px 0; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  overflow-x: auto; text-align: center; font-family: var(--font-body); }
+#appendix-every-commit ~ .tbl { max-height: 85vh; overflow: auto; }
+.split { display: flex; height: 22px; border-radius: 6px; overflow: hidden; margin: 18px 0 8px; gap: 2px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13.5px; color: var(--muted); margin: 0 0 16px; }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; background: var(--c); }
+.s1 { --c: var(--accent); background: var(--c); } .s2 { --c: #5f9e6e; background: var(--c); } .s3 { --c: #9aa5b8; background: var(--c); }
+.s4 { --c: #c9a227; background: var(--c); } .s5 { --c: #8a6fb8; background: var(--c); }
+.legend span { background: none; }
+@media (max-width: 900px) {
+  .wrap { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  nav.toc { position: static; }
+  nav.toc ol { display: flex; flex-wrap: wrap; gap: 2px 14px; }
+  nav.toc a.s { border-left: 0; padding: 2px 0; }
+  main ul, main ol { padding-left: 22px; }
+  .tbl { max-height: 85vh; }
+  th, td { padding: 8px 6px; }
+  td code { white-space: normal; }
+  td a code, #appendix-every-commit ~ .tbl td code { white-space: nowrap; }
+  td:nth-child(2):last-child { overflow-wrap: anywhere; }
+  main { padding: 20px 16px 32px; }
+  h1 { font-size: 26px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc" aria-label="Contents">
+<a class="home" href="../">AI review guides</a>
+<ol>
+<li><a class="s" href="#what-was-missing">What was missing</a></li>
+<li><a class="s" href="#in-numbers">In numbers</a></li>
+<li><a class="s" href="./">Review guide &rarr;</a></li>
+<li><a class="s" href="audit-report.html">Audit report &rarr;</a></li>
+</ol>
+</nav>
+<main>
+<h1>Why this work: what DataStax main-5.0's SAI was missing</h1>
+<p>DataStax's Cassandra 5.0 line (main-5.0) has carried its own Storage-Attached Index (SAI), the one from DSE 6.8, since
+2021. Apache Cassandra fixed its SAI many times after that, but a fix reached DataStax only if someone ported it by
+hand or DataStax fixed the same problem its own way, and many reached it neither way. DataStax's SAI also had bugs
+of its own that Apache's code never had.</p>
+<p>An audit compared every Apache <code>cassandra-5.0</code> and <code>trunk</code> SAI commit with main-5.0 by behaviour, and filed every bug
+it found. A series of 107 commits restores the missing Apache fixes that apply to main-5.0 and fixes DataStax bugs in the same code. The <a href="./">review guide</a> says how to review it; the
+<a href="audit-report.html">audit report</a> has the details.</p>
+<div class="split" role="img" aria-label="The 220 Apache SAI commits: 34 restored by the series, 120 already present or equivalent, 57 not applicable, 4 documented deviations, 5 deferred">
+<span style="flex: 34" class="s1"></span><span style="flex: 120" class="s2"></span><span style="flex: 57" class="s3"></span><span style="flex: 4" class="s4"></span><span style="flex: 5" class="s5"></span>
+</div>
+<p class="legend"><span class="s1">Restored by the series: 34</span> <span class="s2">Already present or equivalent: 120</span> <span class="s3">Not applicable: 57</span> <span class="s4">Documented deviation: 4</span> <span class="s5">Deferred to a 6.0-based line: 5</span></p>
+<h2 id="what-was-missing">What was missing</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Before the series</th>
+<th>Fixed by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Upgrades and imports from Apache Cassandra 5.0</td>
+<td>SAI files written by Apache Cassandra 5.0 were read as DSE 6.8 files: <code>CREATE INDEX</code> on a vector column and imports into a table with a vector index failed, and other indexes were rebuilt from the data</td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/5e60c1c499afecd8de0fbd3eddb16f72e7b7891f"><code>5e60c1c499a</code></a>, a reader of Apache's format</td>
+</tr>
+<tr>
+<td>Clusters with Apache Cassandra 5.0 nodes</td>
+<td>Filters that only DataStax nodes understand were sent to Apache nodes, which read <code>OR</code> as <code>AND</code> and map entry ranges as equalities: wrong results</td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/59001b61e92050ec884b5ecadf05ea2e13f0f330"><code>59001b61e92</code></a>, which refuses such queries while they can reach those nodes</td>
+</tr>
+<tr>
+<td>Writes split across replicas</td>
+<td>An SAI <code>AND</code> missed a row that matches only once the replicas' responses are merged (CASSANDRA-19018)</td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/017d9e35c5935b7096e6dfca6819a2ba3887a546"><code>017d9e35c59</code></a>, with non-strict replica filtering enabled</td>
+</tr>
+<tr>
+<td>Index entries on writes</td>
+<td>Racing writes to one partition of a skip-list memtable could drop a row from its index; a write a trie memtable failed to apply still reached the index; updates and deletions left stale or missing entries in memtable indexes</td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/0235c5d398482723b2fc97271205ce0b97a9f7c7"><code>0235c5d3984</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/ce4eebbd4f15a594cf9af35ddcaec14b27497c25"><code>ce4eebbd4f1</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/325279bbb41a3b8ea02a0fe287f64d7b9404a01e"><code>325279bbb41</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/f6ac88c6c17f689069a4369eb8e59cddffdf8d5a"><code>f6ac88c6c17</code></a> and others</td>
+</tr>
+<tr>
+<td>When an index is queryable</td>
+<td>A new index could adopt the files of a dropped index of the same name; indexes could answer without SSTables added by streams, imports or compaction</td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/995d2963296bcb2c098a5632090d4282ef0080bf"><code>995d2963296</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/c8e58e0487474b5616fde9136b4875e3e8243f5b"><code>c8e58e04874</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/af4e52a0c119fbecc91d715185c8263b2b98e89a"><code>af4e52a0c11</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/041930d6280fc8516c6af3c814e88743bd82b040"><code>041930d6280</code></a> and others</td>
+</tr>
+<tr>
+<td>Static rows and <code>OR</code></td>
+<td>An <code>OR</code> of a static and a regular column was evaluated as <code>AND</code>; indexes on partition key components missed static-only partitions after a build or compaction; replica filtering protection could miss rows when replicas disagreed on the static row</td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/a8c4b2529ec9085b9d5e0f0e9a2df419af31f491"><code>a8c4b2529ec</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/925eff0c75dfabdbbbdd39f1c0f61b5d2f42f4f7"><code>925eff0c75d</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/d00fa3410eaa1c1a9d17b85e7b5eb12648f9462f"><code>d00fa3410ea</code></a> and others</td>
+</tr>
+<tr>
+<td>Value types</td>
+<td>On DESC <code>inet</code>, <code>varint</code> and <code>decimal</code> clustering columns, ranges missed rows, <code>inet</code> and <code>varint</code> index flushes failed, and reads and builds of <code>decimal</code> indexes failed (CASSANDRA-20100); the term size guardrails were never enforced, so oversized terms were left out of the index (CASSANDRA-19493)</td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/5d22616e371db107087034833c341473452591ab"><code>5d22616e371</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/b6c0e11a1abd20f5da5317e8f0f333a6ccc171a8"><code>b6c0e11a1ab</code></a></td>
+</tr>
+<tr>
+<td>Query and index support</td>
+<td><code>LIKE</code> in filtering queries and SAI on <code>blob</code> columns, which Apache Cassandra has on trunk, were missing; reads that need an index a replica doesn't know yet failed with an internal error</td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/331dd77ba029ff8154ca46fdf102e48dee2fb685"><code>331dd77ba02</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/744cd7cf3767d0fce48c014b317984b7688456b1"><code>744cd7cf376</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/817347ca894d56d8dc9f8608e76a93047dd4359b"><code>817347ca894</code></a></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="in-numbers">In numbers</h2>
+<ul>
+<li>183 new issues filed on the <a href="https://github.com/JeremiahDJordan/cassandra/issues">fork</a>, 32 of them blocker or
+critical, with 209 pull requests against the fork's copies of the released DataStax and Apache branches.</li>
+<li>The series: 107 commits, about 64,000 added lines, three quarters of them tests. The full unit and in-JVM dtest
+suites pass on the published branch.</li>
+</ul>
+
+</main>
+</div>
+</body>
+</html>

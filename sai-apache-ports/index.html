@@ -52,10 +52,24 @@ td code { white-space: nowrap; }
 em { color: var(--muted); }
 pre.mermaid { margin: 16px 0; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
   overflow-x: auto; text-align: center; font-family: var(--font-body); }
+#appendix-every-commit ~ .tbl { max-height: 85vh; overflow: auto; }
+.split { display: flex; height: 22px; border-radius: 6px; overflow: hidden; margin: 18px 0 8px; gap: 2px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13.5px; color: var(--muted); margin: 0 0 16px; }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; background: var(--c); }
+.s1 { --c: var(--accent); background: var(--c); } .s2 { --c: #5f9e6e; background: var(--c); } .s3 { --c: #9aa5b8; background: var(--c); }
+.s4 { --c: #c9a227; background: var(--c); } .s5 { --c: #8a6fb8; background: var(--c); }
+.legend span { background: none; }
 @media (max-width: 900px) {
   .wrap { grid-template-columns: minmax(0, 1fr); gap: 16px; }
   nav.toc { position: static; }
-  nav.toc ol { display: none; }
+  nav.toc ol { display: flex; flex-wrap: wrap; gap: 2px 14px; }
+  nav.toc a.s { border-left: 0; padding: 2px 0; }
+  main ul, main ol { padding-left: 22px; }
+  .tbl { max-height: 85vh; }
+  th, td { padding: 8px 6px; }
+  td code { white-space: normal; }
+  td a code, #appendix-every-commit ~ .tbl td code { white-space: nowrap; }
+  td:nth-child(2):last-child { overflow-wrap: anywhere; }
   main { padding: 20px 16px 32px; }
   h1 { font-size: 26px; }
 }
@@ -68,50 +82,54 @@ pre.mermaid { margin: 16px 0; padding: 16px; background: var(--surface); border:
 <ol>
 <li><a class="s" href="#the-change-under-review">The change under review</a></li>
 <li><a class="s" href="#background-in-four-points">Background in four points</a></li>
-<li><a class="s" href="#how-to-read-a-commit">How to read a commit</a></li>
+<li><a class="s" href="#how-to-review-a-commit">How to review a commit</a></li>
 <li><a class="s" href="#where-to-start">Where to start</a></li>
-<li><a class="s" href="#the-commits-by-area">The commits by area</a></li>
 <li><a class="s" href="#decisions-already-made">Decisions already made</a></li>
-<li><a class="s" href="#checks-that-apply-to-every-commit">Checks that apply to every commit</a></li>
+<li><a class="s" href="#the-commits-by-area">The commits by area</a></li>
 <li><a class="s" href="#later-commits-on-the-same-code">Later commits on the same code</a></li>
 <li><a class="s" href="#evidence">Evidence</a></li>
 <li><a class="s" href="#using-this-guide-with-an-ai-reviewer">Using this guide with an AI reviewer</a></li>
 <li><a class="s" href="#appendix-every-commit">Appendix: every commit</a></li>
+<li><a class="s" href="overview.html">Why this work &rarr;</a></li>
 <li><a class="s" href="audit-report.html">Audit report &rarr;</a></li>
 </ol>
 </nav>
 <main>
 <h1>Review guide: Apache SAI fixes restored on DataStax main-5.0</h1>
 <p>This guide is for reviewers, human or AI, of the commits that bring Apache Cassandra's Storage-Attached Index (SAI)
-fixes into DataStax's Cassandra 5.0 line. It says what the commits are, where to start, what each group of commits
-changes, and what to check in each. The <a href="audit-report.html">audit report</a> has the full classification of every Apache
-SAI commit, the test evidence and the bugs filed along the way.</p>
+fixes into DataStax's Cassandra 5.0 line. The <a href="overview.html">overview</a> says on one page what main-5.0 was missing; the
+<a href="audit-report.html">audit report</a> has the full classification of every Apache SAI commit, the test evidence and the
+bugs filed along the way.</p>
 <h2 id="the-change-under-review">The change under review</h2>
 <ul>
 <li><strong>Branch:</strong> <code>main-5.0-fb7f1b7aee-merge</code> (mainline in this guide): DataStax's 5.0 line (main-5.0, branch <code>main</code> of
-datastax/cassandra) merged with Apache <code>cassandra-5.0</code> at <code>fb7f1b7aee</code>. The branch isn't published, so the commit IDs below can't
-be opened on GitHub; reviewers need access to the branch, and this guide doesn't publish the code. Its history has
-been rewritten before; if an ID doesn't resolve, find the commit by its subject.</li>
-<li><strong>Commits:</strong> 106 commits, <code>git log --reverse fa5d580418e..ae493d880df</code>, plus <code>1d5c08a0ffb</code> (return only the selected
-static columns from a trie memtable partition read with no slice), which landed earlier. Every commit is
-<code>CNDB-XXX: &lt;summary&gt;</code>, by Jeremiah Jordan except the CNDB-19682 cherry-pick (<code>572931a4f9b</code>, by its original author).</li>
+datastax/cassandra) merged with Apache <code>cassandra-5.0</code> at <a href="https://github.com/JeremiahDJordan/cassandra/commit/fb7f1b7aeebb9565305aad76025530dc30f697fb"><code>fb7f1b7aee</code></a>, published as
+<a href="https://github.com/JeremiahDJordan/cassandra/tree/in-progress/main-5.0-fb7f1b7aee-merge"><code>in-progress/main-5.0-fb7f1b7aee-merge</code></a>
+on JeremiahDJordan/cassandra. The commit IDs below link to it. Its history has been rewritten before; if an ID
+doesn't resolve, find the commit by its subject.</li>
+<li><strong>Commits:</strong> 106 commits, <code>git log --reverse fa5d580418e..ae493d880df</code>
+(<a href="https://github.com/JeremiahDJordan/cassandra/compare/fa5d580418e...ae493d880df">on GitHub</a>), plus <a href="https://github.com/JeremiahDJordan/cassandra/commit/1d5c08a0ffbf5d0e821e6609420a6bdade3c23e6"><code>1d5c08a0ffb</code></a> (return only the selected
+static columns from a trie memtable partition read with no slice), which landed earlier. Every commit has a
+<code>CNDB-XXX: &lt;summary&gt;</code> subject and Jeremiah Jordan as author, except the CNDB-19682 cherry-pick (<a href="https://github.com/JeremiahDJordan/cassandra/commit/572931a4f9b32e21f8217beeec8c6b3ff8ab4ab9"><code>572931a4f9b</code></a>),
+which keeps its subject and original author.</li>
 <li><strong>Size:</strong> about 64,000 added lines, three quarters of them tests. The biggest commits are the reader of Apache-written
-SAI files (<code>5e60c1c499a</code>, +8,941), non-strict replica filtering (<code>017d9e35c59</code>, +5,834) and the static-row and row
-numbering fix (<code>925eff0c75d</code>, +4,124).</li>
-<li><strong>State:</strong> the series passed a private test runner on JDK 11 with 0 failures (see <a href="#evidence">Evidence</a>).</li>
+SAI files (<a href="https://github.com/JeremiahDJordan/cassandra/commit/5e60c1c499afecd8de0fbd3eddb16f72e7b7891f"><code>5e60c1c499a</code></a>, +8,941), non-strict replica filtering (<a href="https://github.com/JeremiahDJordan/cassandra/commit/017d9e35c5935b7096e6dfca6819a2ba3887a546"><code>017d9e35c59</code></a>, +5,834) and the static-row and row
+numbering fix (<a href="https://github.com/JeremiahDJordan/cassandra/commit/925eff0c75dfabdbbbdd39f1c0f61b5d2f42f4f7"><code>925eff0c75d</code></a>, +4,124).</li>
+<li><strong>State:</strong> the full unit and in-JVM dtest suites pass on the published branch tip (see <a href="#evidence">Evidence</a>).</li>
 </ul>
 <h2 id="background-in-four-points">Background in four points</h2>
 <ol>
 <li>DataStax built SAI for DSE 6.8 and contributed it to Apache as CEP-7. Apache Cassandra 5.0 then shipped its own
 implementation with its own on-disk format, also called <code>aa</code>.</li>
 <li>DataStax's tree has carried its own SAI since 2021 (STAR-121); on the 5.0 line that commit replaces Apache's SAI.
-Each later Apache SAI fix reached DataStax only by a hand port, and most never got one.</li>
+Each later Apache SAI fix reached DataStax only by a hand port, or by DataStax fixing the same problem its own
+way; many reached it neither way.</li>
 <li>The audit checked all 220 Apache <code>cassandra-5.0</code> and <code>trunk</code> SAI commits against DataStax main-5.0 by behaviour:
 34 are restored by these commits, 120 were already present or equivalent, 57 don't apply, 4 are kept as
 documented deviations and 5 are deferred.</li>
 <li>Many commits fix DataStax-only bugs in the same code. The restored fixes and their tests depend on them.</li>
 </ol>
-<h2 id="how-to-read-a-commit">How to read a commit</h2>
+<h2 id="how-to-review-a-commit">How to review a commit</h2>
 <ul>
 <li><strong>The message is the specification.</strong> Each message says what was wrong, why, and what changed, with a reproducer
 in plain CQL where there is one. Check the code against the message, then the message against the code: a
@@ -121,11 +139,26 @@ behaviour the code changes that the message doesn't mention is a finding.</li>
 <code>Tests adopted from CASSANDRA-NNNNN (...)</code> for ported tests, and <code>(cherry picked from commit &lt;sha&gt;)</code> for an
 unchanged pick. Compare an adapted commit with its Apache commit: the differences should be what this SAI's code
 needs, not a different fix.</li>
-<li><strong>One complete fix per commit.</strong> Each commit builds, passes its own tests, and doesn't need a later commit to be
-correct. A later commit that changes an earlier one's code says so in its message.</li>
+<li><strong>One complete fix per commit.</strong> A commit doesn't need a later commit to be correct. A later commit that changes an
+earlier one's code says so in its message.</li>
 <li><strong>NEWS.txt</strong> gets an entry for every change an operator can see: new settings, changed results, upgrade steps.
 Check that the entry exists and that it matches the code.</li>
 </ul>
+<p>Check in every commit:</p>
+<ol>
+<li><strong>Tests fail without the fix.</strong> For a behaviour change, revert the production change and run the commit's new
+tests: at least one must fail; the others may cover behaviour the fix keeps. SAI tests write version <code>ec</code> unless
+told otherwise; for a change that depends on the on-disk version, also run them with the system property
+<code>cassandra.sai.latest.version=ga</code> (with ant: <code>-Dtest.jvm.args=-Dcassandra.sai.latest.version=ga</code>), or the version
+the message names.</li>
+<li><strong>Tests match their neighbours.</strong> New tests use the same base class and helpers as the tests next to them
+(<code>SAITester</code>/<code>CQLTester</code>, <code>createTable</code>, <code>execute</code>, <code>assertRows</code>, <code>flush</code>, <code>compact</code>), and in-JVM dtests use
+<code>cluster.coordinator(n).execute</code>.</li>
+<li><strong>Comments are short and state facts.</strong> No comments that narrate the change or the bug's history.</li>
+<li><strong>No new cost on the read and write hot paths</strong> without a reason the message gives.</li>
+<li><strong>Edge cases off the intended use</strong> are refused with a clear error or documented, not handled with extra
+mechanisms.</li>
+</ol>
 <h2 id="where-to-start">Where to start</h2>
 <p>Review the commits with compatibility or concurrency impact first. A bug in these is hard to undo once released:</p>
 <div class="tbl"><table>
@@ -138,115 +171,135 @@ Check that the entry exists and that it matches the code.</li>
 </thead>
 <tbody>
 <tr>
-<td><code>59001b61e92</code> Reject DataStax-only row filter features in queries that can reach Apache Cassandra nodes</td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/59001b61e92050ec884b5ecadf05ea2e13f0f330"><code>59001b61e92</code></a> Reject DataStax-only row filter features in queries that can reach Apache Cassandra nodes</td>
 <td>Decides which queries are refused in a mixed cluster</td>
 <td>Which nodes a query &quot;can reach&quot; per consistency level; the cache of the peer check and every event that invalidates it; that <code>:</code> is sent as <code>=</code> only where that is the same query</td>
 </tr>
 <tr>
-<td><code>331dd77ba02</code> Support LIKE restrictions in filtering queries</td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/331dd77ba029ff8154ca46fdf102e48dee2fb685"><code>331dd77ba02</code></a> Support LIKE restrictions in filtering queries</td>
 <td>Introduces messaging version DS 21 (111), announced but not used for serialization</td>
 <td>Every place that compares versions: schema pull and push, <code>PrepareMessage</code>, <code>Batch</code>, serialized-size caches. Downgrade: is anything written in DS 21?</td>
 </tr>
 <tr>
-<td><code>744cd7cf376</code> Support blob columns in SAI indexes</td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/744cd7cf3767d0fce48c014b317984b7688456b1"><code>744cd7cf376</code></a> Support blob columns in SAI indexes</td>
 <td><code>CREATE INDEX</code> gated on every peer's version</td>
 <td>Unknown and down peers count; the <code>new_feature_peer_version_check: none</code> opt-out</td>
 </tr>
 <tr>
-<td><code>017d9e35c59</code> Relax SAI intersections on replicas when the coordinator enables non-strict filtering</td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/017d9e35c5935b7096e6dfca6819a2ba3887a546"><code>017d9e35c59</code></a> Relax SAI intersections on replicas when the coordinator enables non-strict filtering</td>
 <td>Changes what replicas return and what the coordinator reconciles</td>
 <td>The decision is made once per read and kept by every copy of the filter (digest, speculative retry, short-read and replica-filtering protection, read repair); the <code>ds.sai.nonstrict</code> message parameter</td>
 </tr>
 <tr>
-<td><code>5e60c1c499a</code> Read the SAI indexes written by Apache Cassandra 5.0</td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/5e60c1c499afecd8de0fbd3eddb16f72e7b7891f"><code>5e60c1c499a</code></a> Read the SAI indexes written by Apache Cassandra 5.0</td>
 <td>New read-only on-disk version <code>aa(apache)</code></td>
 <td>Byte order, CRC32C checksums, key encoding, the block-balanced tree reader, jvector graph compatibility; that nothing ever writes this version; the <code>cassandra.sai.read_apache_format=false</code> switch</td>
 </tr>
 <tr>
-<td><code>995d2963296</code> Don't let a new SAI index adopt stale components of a same-name index</td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/995d2963296bcb2c098a5632090d4282ef0080bf"><code>995d2963296</code></a> Don't let a new SAI index adopt stale components of a same-name index</td>
 <td>Changes the completion marker's content</td>
 <td>Legacy empty markers stay valid; the bounded marker read; older binaries only check existence</td>
 </tr>
 <tr>
-<td><code>925eff0c75d</code> Index static rows on partition key components, and number SAI rows alike in every build</td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/925eff0c75dfabdbbbdd39f1c0f61b5d2f42f4f7"><code>925eff0c75d</code></a> Index static rows on partition key components, and number SAI rows alike in every build</td>
 <td>Changes row numbering in builds</td>
 <td>Components written by earlier releases keep working; a mismatch in row counts fails the build rather than misreading</td>
 </tr>
 <tr>
-<td><code>0235c5d3984</code> Apply SAI updates to skip-list memtables atomically, so racing writes keep index entries</td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/0235c5d398482723b2fc97271205ce0b97a9f7c7"><code>0235c5d3984</code></a> Apply SAI updates to skip-list memtables atomically, so racing writes keep index entries</td>
 <td>Serializes writes per partition on tables with SAI</td>
-<td>Lock scope; no lock on tables without SAI; bookkeeping of an applied update when the index transaction fails</td>
+<td>Lock scope; which indexers request atomic updates; bookkeeping of an applied update when the index transaction fails</td>
 </tr>
 <tr>
-<td><code>ca4909363c8</code> Accept partition keys that share a token in SAI version GA, and look them up by key</td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/ca4909363c80c5f1ce78328d8cd107ba7ce94666"><code>ca4909363c8</code></a> Accept partition keys that share a token in SAI version GA, and look them up by key</td>
 <td>Primary key map lookups on every version</td>
 <td>Exact, ceiling and floor lookups for keys sharing a token, per map type and version</td>
 </tr>
 <tr>
-<td><code>998ea989cb5</code> Index map entries, frozen values and varints in canonical form in SAI</td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/998ea989cb55bc629f936943c6786fb704f00f77"><code>998ea989cb5</code></a> Index map entries, frozen values and varints in canonical form in SAI</td>
 <td>New term encoding for some values</td>
 <td>Old indexes are still searched with values as written; size checks use the canonical size</td>
 </tr>
 <tr>
-<td><code>817347ca894</code> Fail a read that only an unknown index can serve as an index not available</td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/817347ca894d56d8dc9f8608e76a93047dd4359b"><code>817347ca894</code></a> Fail a read that only an unknown index can serve as an index not available</td>
 <td>Read path on replicas that don't know an index yet</td>
-<td>Every case that leaves the command without an index plan; the client sees &quot;index not available&quot;, not an internal error</td>
+<td>Equality falls back to filtering; a full-primary-key <code>:</code> read uses the analyzer if it has one; other reads that need an unavailable index, and reads whose index hint includes one, fail with &quot;index not available&quot;, never an internal error</td>
 </tr>
 </tbody>
 </table></div>
+<h2 id="decisions-already-made">Decisions already made</h2>
+<p>A review should check that the code and the documentation agree with these, not reopen them:</p>
+<ul>
+<li><strong>Replica filtering stays strict by default.</strong> CASSANDRA-19018's relaxed filtering is restored behind
+<code>sai_options.non_strict_replica_filtering_enabled</code> (default <code>false</code>), because it can make queries much more
+expensive.</li>
+<li><strong>CASSANDRA-18490's checksum check on partial builds is on by default</strong>, as in Apache Cassandra.</li>
+<li><strong>A null element of a filtered single-column <code>IN</code> is ignored</strong>, as in Apache Cassandra 5.0. An earlier mainline
+commit rejected it.</li>
+<li><strong><code>CONTAINS</code>, <code>CONTAINS KEY</code> and their negations on an unindexed frozen collection</strong> are evaluated per element
+during SAI post-filtering; CASSANDRA-21863 rejects that case.</li>
+<li><strong>Documented deviations:</strong> CASSANDRA-18730 (the vector dimension guardrail default), CASSANDRA-20334
+(<code>prioritize_over_legacy_index</code> defaults to <code>true</code>), CASSANDRA-18782 (<code>case_sensitive</code>, <code>normalize</code> and <code>ascii</code> are
+accepted on primary key columns, have no effect there, and warn for non-default values) and CASSANDRA-21515 (a
+full rebuild of one index rewrites the shared per-SSTable components).</li>
+<li><strong>Deferred to a 6.0-based line:</strong> <code>BETWEEN</code> (CASSANDRA-19604, 19688, 19878, 20154) and CASSANDRA-18492.</li>
+<li><strong>Read, not written:</strong> these commits read Apache's <code>aa</code> format through a read-only version; nothing in them writes
+it.</li>
+</ul>
 <h2 id="the-commits-by-area">The commits by area</h2>
 <p>The <a href="#appendix-every-commit">appendix</a> lists all 107 commits in branch order with their sources and tests. The
 same commits by area, with the area numbers showing where each area acts:</p>
 <pre class="mermaid">flowchart LR
+    CL[&quot;Client query&quot;] --&gt; CO[&quot;Coordinator: what to send&lt;br/&gt;to which nodes (1), limits,&lt;br/&gt;short read and replica&lt;br/&gt;filtering protection (6)&quot;]
+    CO --&gt; RP[&quot;Replica: index plan and&lt;br/&gt;query semantics (5), static&lt;br/&gt;rows and OR (6), ORDER BY&lt;br/&gt;and vectors (7)&quot;]
+    RP --&gt; MI[&quot;SAI memtable index (4)&quot;]
+    RP --&gt; SI[&quot;SSTable index components (2)&quot;]
     W[&quot;Writes&quot;] --&gt; MW[&quot;Memtable write path (4)&quot;]
-    MW --&gt; MI[&quot;SAI memtable index (4)&quot;]
-    MW --&gt;|&quot;flush&quot;| SI[&quot;SSTable index components (2)&quot;]
-    AP[&quot;SSTables written by Apache Cassandra 5.0&quot;] --&gt;|&quot;read-only reader (2)&quot;| SI
-    BL[&quot;Builds, restarts, imports, streams (3)&quot;] --&gt; SI
-    CP[&quot;Compaction and expiration (8)&quot;] --&gt; SI
-    CL[&quot;Client query&quot;] --&gt; CO[&quot;Coordinator: what to send to which nodes (1),&lt;br/&gt;limits, short read and replica filtering protection (6)&quot;]
-    CO --&gt; RP[&quot;Replica: index plan and query semantics (5),&lt;br/&gt;static rows and OR (6), ORDER BY and vectors (7)&quot;]
-    RP --&gt; MI
-    RP --&gt; SI
+    MW --&gt; MI
+    MW --&gt;|&quot;flush&quot;| SI
+    AP[&quot;SSTables written by&lt;br/&gt;Apache Cassandra 5.0&quot;] --&gt;|&quot;read-only reader (2)&quot;| SI
+    BL[&quot;Builds, restarts,&lt;br/&gt;imports, streams (3)&quot;] --&gt; SI
+    CP[&quot;Compaction and&lt;br/&gt;expiration (8)&quot;] --&gt; SI
 </pre>
 <h3 id="1-mixed-clusters-with-apache-cassandra-50-nodes">1. Mixed clusters with Apache Cassandra 5.0 nodes</h3>
-<p><code>59001b61e92</code>, <code>331dd77ba02</code>, <code>744cd7cf376</code>, <code>017d9e35c59</code> (with <code>c527cfcaffb</code>, CASSANDRA-20189), <code>a23830ebd5d</code>
-(CASSANDRA-21700), <code>817347ca894</code>.</p>
+<p><a href="https://github.com/JeremiahDJordan/cassandra/commit/59001b61e92050ec884b5ecadf05ea2e13f0f330"><code>59001b61e92</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/331dd77ba029ff8154ca46fdf102e48dee2fb685"><code>331dd77ba02</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/744cd7cf3767d0fce48c014b317984b7688456b1"><code>744cd7cf376</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/017d9e35c5935b7096e6dfca6819a2ba3887a546"><code>017d9e35c59</code></a> (with <a href="https://github.com/JeremiahDJordan/cassandra/commit/c527cfcaffbc3a6ac730131e35a02064ba795290"><code>c527cfcaffb</code></a>, CASSANDRA-20189, below), <a href="https://github.com/JeremiahDJordan/cassandra/commit/a23830ebd5dea54b32aee85489818b556a8d5b76"><code>a23830ebd5d</code></a>
+(CASSANDRA-21700), <a href="https://github.com/JeremiahDJordan/cassandra/commit/817347ca894d56d8dc9f8608e76a93047dd4359b"><code>817347ca894</code></a>.</p>
 <p>A DataStax 5.0 cluster can contain Apache Cassandra 5.0 nodes during a migration. Apache Cassandra 5.0 nodes are on
 messaging version 13; DataStax nodes are on DS 10 (100) or later. These commits decide what a
 DataStax node sends to them and what it refuses.</p>
-<p>A query whose filter has parts that only DataStax nodes can read (<code>59001b61e92</code>):</p>
+<p>A query whose filter has parts that only DataStax nodes can read (<a href="https://github.com/JeremiahDJordan/cassandra/commit/59001b61e92050ec884b5ecadf05ea2e13f0f330"><code>59001b61e92</code></a>):</p>
 <pre class="mermaid">flowchart TD
-    Q[&quot;SELECT with a row filter&quot;] --&gt; E{&quot;empty filter?&quot;}
+    Q[&quot;SELECT with a row filter&quot;] --&gt; E{{&quot;empty filter?&quot;}}
     E --&gt;|&quot;yes&quot;| S[&quot;sent as is&quot;]
     E --&gt;|&quot;no&quot;| R[&quot;nodes the query can contact:&lt;br/&gt;LOCAL_ONE, LOCAL_QUORUM, LOCAL_SERIAL: this datacenter's;&lt;br/&gt;other levels: every node of the keyspace&quot;]
-    R --&gt; V{&quot;any below messaging version DS 10,&lt;br/&gt;or live with a version not known yet?&quot;}
+    R --&gt; V{{&quot;this node or one of them&lt;br/&gt;below DS 10, or live with&lt;br/&gt;a version not known yet?&quot;}}
     V --&gt;|&quot;no&quot;| S
-    V --&gt;|&quot;yes&quot;| F{&quot;DataStax-only parts?&quot;}
+    V --&gt;|&quot;yes&quot;| F{{&quot;DataStax-only parts?&quot;}}
     F --&gt;|&quot;no&quot;| S
-    F --&gt;|&quot;':' that '=' also serves on that column&quot;| T[&quot;sent as '='&quot;]
+    F --&gt;|&quot;':' on a column whose indexes are&lt;br/&gt;all non-tokenizing and serve '='&quot;| T[&quot;sent as '='&quot;]
     F --&gt;|&quot;NOT IN&quot;| T2[&quot;sent as '!='&quot;]
-    F --&gt;|&quot;OR, NOT CONTAINS, NOT LIKE, BM25, other ':' ...&quot;| X[&quot;InvalidRequestException&quot;]
+    F --&gt;|&quot;OR, NOT CONTAINS,&lt;br/&gt;NOT LIKE, BM25,&lt;br/&gt;other ':' ...&quot;| X[&quot;InvalidRequestException&quot;]
 </pre>
 <p>The result of the node check is cached per keyspace and scope until a messaging version, gossip state, liveness,
 peer, token metadata or keyspace replication changes. A node not counted yet is still protected: the serializers
 refuse these parts for a node below DS 10, and the request fails at once. LIKE has its own check, at DS 21
-(<code>331dd77ba02</code>).</p>
-<p>Non-strict replica filtering (<code>017d9e35c59</code>), for a row whose restricted columns were written to different
-replicas:</p>
+(<a href="https://github.com/JeremiahDJordan/cassandra/commit/331dd77ba029ff8154ca46fdf102e48dee2fb685"><code>331dd77ba02</code></a>).</p>
+<p><a href="https://github.com/JeremiahDJordan/cassandra/commit/c527cfcaffbc3a6ac730131e35a02064ba795290"><code>c527cfcaffb</code></a> also relaxes the post-filter of unindexed columns when the index matches are repaired. Non-strict
+replica filtering (<a href="https://github.com/JeremiahDJordan/cassandra/commit/017d9e35c5935b7096e6dfca6819a2ba3887a546"><code>017d9e35c59</code></a>), for a row whose indexed columns were written to different replicas:</p>
 <pre class="mermaid">sequenceDiagram
     participant C as Coordinator
     participant R as Replicas of this release
-    C-&gt;&gt;C: build the row filter once per read: relaxable if&lt;br/&gt;non_strict_replica_filtering_enabled, or a node below DS 10 can be contacted
+    C-&gt;&gt;C: build the row filter once per read: relaxable&lt;br/&gt;if non_strict_replica_filtering_enabled,&lt;br/&gt;or a node below DS 10 can be contacted
     C-&gt;&gt;R: read, with the ds.sai.nonstrict parameter only if relaxable
-    R-&gt;&gt;R: repaired data: intersect the index matches&lt;br/&gt;unrepaired data: union of each expression's matches
+    R-&gt;&gt;R: index plan: each AND becomes the union of every&lt;br/&gt;expression's unrepaired matches and&lt;br/&gt;the intersection of the repaired ones
+    R-&gt;&gt;R: post-filter: AND is evaluated as OR&lt;br/&gt;if an indexed expression has unrepaired matches
     R--&gt;&gt;C: candidate rows
     C-&gt;&gt;C: reconcile the responses, then apply the filter&lt;br/&gt;(replica filtering protection)
-    Note over C,R: Without the parameter, replicas filter strictly, as before.&lt;br/&gt;The data and digest requests, retries, protection reads and read repair of a read all use the same decision.
+    Note over C,R: Without the parameter, replicas filter strictly, as before.&lt;br/&gt;The data and digest requests, retries, protection reads&lt;br/&gt;and read repair of a read all use the same decision.
 </pre>
-<p>Ordered queries, ONE and LOCAL_ONE, single-replica keyspaces and filters on one mutable column stay strict. A strict
-filter is never sent to a node below DS 10, which would relax it: the serializer refuses it, and the coordinator
-reads the query or page once more with a filter that replicas can relax.</p>
+<p>Ordered queries, ONE and LOCAL_ONE, single-replica keyspaces and filters on one mutable column stay strict. A filter made
+strict can't be sent to a node below DS 10, which would relax it: the serializer refuses it, and when that fails a
+<code>SELECT</code>, the coordinator reads the query or page once more with a filter that replicas can relax.</p>
 <p>Check:</p>
 <ul>
 <li>Decisions about what to send use the <strong>messaging version</strong> only, never a release version. A peer below DS 10 is an
@@ -259,10 +312,12 @@ own implementation.</li>
 <code>BlobIndexDistributedTest</code>) cover peers on older messaging versions.</li>
 </ul>
 <h3 id="2-on-disk-formats">2. On-disk formats</h3>
-<p><code>5e60c1c499a</code> (Apache reader), <code>72911dd398b</code> (vector checksums, CASSANDRA-21516), <code>ca4909363c8</code> (token collisions at
-GA), <code>998ea989cb5</code> (canonical terms), <code>5d22616e371</code> (DESC inet, varint and decimal clustering columns,
+<p>This SAI's on-disk versions are, oldest first, AA (DSE 6.8), BA, CA, DB, DC, EB, EC (written by default), ED, FA, FB
+and GA. Apache Cassandra 5.0's <code>aa</code> is a different format, read here as <code>aa(apache)</code>.</p>
+<p><a href="https://github.com/JeremiahDJordan/cassandra/commit/5e60c1c499afecd8de0fbd3eddb16f72e7b7891f"><code>5e60c1c499a</code></a> (Apache reader), <a href="https://github.com/JeremiahDJordan/cassandra/commit/72911dd398b180c4abc53291a4ffa2b82e0bc716"><code>72911dd398b</code></a> (vector checksums, CASSANDRA-21516), <a href="https://github.com/JeremiahDJordan/cassandra/commit/ca4909363c80c5f1ce78328d8cd107ba7ce94666"><code>ca4909363c8</code></a> (token collisions at
+GA), <a href="https://github.com/JeremiahDJordan/cassandra/commit/998ea989cb55bc629f936943c6786fb704f00f77"><code>998ea989cb5</code></a> (canonical terms), <a href="https://github.com/JeremiahDJordan/cassandra/commit/5d22616e371db107087034833c341473452591ab"><code>5d22616e371</code></a> (DESC inet, varint and decimal clustering columns,
 CASSANDRA-20100),
-<code>820800c8532</code> and <code>ac2d89aeea3</code> (behaviour before versions DC and DB), <code>95a19f32a62</code> (rewrite corrupt per-SSTable
+<a href="https://github.com/JeremiahDJordan/cassandra/commit/820800c8532dbe414b2d89c5cd0ae3a5e8e3efa5"><code>820800c8532</code></a> and <a href="https://github.com/JeremiahDJordan/cassandra/commit/ac2d89aeea30df9228b88bf721b03ac97d139508"><code>ac2d89aeea3</code></a> (behaviour before versions DC and DB), <a href="https://github.com/JeremiahDJordan/cassandra/commit/95a19f32a62fae18e10f648be6d8969046ecc26a"><code>95a19f32a62</code></a> (rewrite corrupt per-SSTable
 components, CASSANDRA-18490).</p>
 <p>Check:</p>
 <ul>
@@ -270,52 +325,57 @@ components, CASSANDRA-18490).</p>
 compatibility rule. A new behaviour that depends on the format is gated on the SAI version.</li>
 <li>Readers of older versions stay correct: the tests include SSTables written by earlier releases and by Apache
 Cassandra 5.0 (<code>test/data/...</code>), loaded and queried.</li>
-<li><code>95a19f32a62</code> is on by default (<code>cassandra.sai.validate_per_sstable_checksum_on_partial_build</code>), as in Apache
+<li><a href="https://github.com/JeremiahDJordan/cassandra/commit/95a19f32a62fae18e10f648be6d8969046ecc26a"><code>95a19f32a62</code></a> is on by default (<code>cassandra.sai.validate_per_sstable_checksum_on_partial_build</code>), as in Apache
 Cassandra; it adds reads to partial builds.</li>
 </ul>
-<p>How SSTables with Apache Cassandra's SAI files are used (<code>5e60c1c499a</code>):</p>
+<p>How SSTables with Apache Cassandra's SAI files are used (<a href="https://github.com/JeremiahDJordan/cassandra/commit/5e60c1c499afecd8de0fbd3eddb16f72e7b7891f"><code>5e60c1c499a</code></a>):</p>
 <pre class="mermaid">flowchart TD
-    AF[&quot;SSTable with Apache SAI files, SAI+aa+...db,&lt;br/&gt;from an in-place upgrade, an import or a stream&quot;] --&gt; RO[&quot;read through Version.APACHE_AA:&lt;br/&gt;read-only, ordered before every DataStax version&quot;]
-    RO --&gt; U[&quot;indexes that exist when the table is loaded,&lt;br/&gt;or that SSTables are imported or streamed into, use them&quot;]
-    AF --&gt; CI[&quot;CREATE INDEX on an existing table:&lt;br/&gt;discards the Apache components of its name and builds&quot;]
-    AF --&gt; B[&quot;a build that writes DataStax components on the SSTable:&lt;br/&gt;rebuilds every index of the SSTable in one pass&lt;br/&gt;(Apache row ids only match Apache's per-SSTable components)&quot;]
-    B --&gt; RM[&quot;the Apache components are removed from the TOC, then from disk&quot;]
+    AF[&quot;SSTable with Apache SAI files, SAI+aa+...db,&lt;br/&gt;from an in-place upgrade, an import&lt;br/&gt;or an entire-SSTable stream&quot;] --&gt; RO[&quot;read through Version.APACHE_AA:&lt;br/&gt;read-only, ordered before&lt;br/&gt;every DataStax version&quot;]
+    RO --&gt; U[&quot;existing indexes use the components&lt;br/&gt;on load, import or stream&lt;br/&gt;(BM25 needs a rebuild)&quot;]
+    U --&gt;|&quot;corrupt components&quot;| B
+    AF --&gt; CI[&quot;CREATE INDEX on an existing table:&lt;br/&gt;discards the Apache components&lt;br/&gt;of its name&quot;]
+    CI --&gt; B
+    AF --&gt; B[&quot;a build that writes DataStax&lt;br/&gt;components on the SSTable: rebuilds&lt;br/&gt;every index of the SSTable in one pass&lt;br/&gt;(Apache row ids only match&lt;br/&gt;Apache's per-SSTable components)&quot;]
+    B --&gt; RM[&quot;the Apache components are removed&lt;br/&gt;from the TOC, then from disk&quot;]
 </pre>
 <h3 id="3-index-lifecycle-builds-restarts-imports-and-streams">3. Index lifecycle: builds, restarts, imports and streams</h3>
-<p><code>60cfffb636a</code>, <code>039862defa6</code> (CASSANDRA-20732), <code>904759d3a01</code>, <code>995d2963296</code>, <code>c8e58e04874</code>, <code>7ca866b71d4</code>,
-<code>af4e52a0c11</code>, <code>2cb2f35aefb</code>, <code>e8a4b150529</code>, <code>1ae87c2c71a</code>, <code>041930d6280</code>, <code>ececdb3a126</code>, <code>4f5df98f6e3</code>,
-<code>1ea565c5b31</code> (CASSANDRA-21671), <code>ae493d880df</code>, <code>5ac6f62ee4f</code> (CASSANDRA-19987), <code>ac17666cdb8</code> (writer abort
+<p><a href="https://github.com/JeremiahDJordan/cassandra/commit/60cfffb636a878a76e7f12087275f40b49166d66"><code>60cfffb636a</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/039862defa6e2226219702825cb6fdd250237adf"><code>039862defa6</code></a> (CASSANDRA-20732), <a href="https://github.com/JeremiahDJordan/cassandra/commit/904759d3a01b1fd659897741a10d757b1fc08113"><code>904759d3a01</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/995d2963296bcb2c098a5632090d4282ef0080bf"><code>995d2963296</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/c8e58e0487474b5616fde9136b4875e3e8243f5b"><code>c8e58e04874</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/7ca866b71d49c0ebf4c2f37a28c1e06721cfe657"><code>7ca866b71d4</code></a>,
+<a href="https://github.com/JeremiahDJordan/cassandra/commit/af4e52a0c119fbecc91d715185c8263b2b98e89a"><code>af4e52a0c11</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/2cb2f35aefbbdd962cf8b6da5d5796b25ee4ff1b"><code>2cb2f35aefb</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/e8a4b1505292b3fe71021d98bc202040c4448335"><code>e8a4b150529</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/1ae87c2c71a86dc6ef910cc257c239b91d4d1be6"><code>1ae87c2c71a</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/041930d6280fc8516c6af3c814e88743bd82b040"><code>041930d6280</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/ececdb3a1268b70690d203b2e150865f57e8f445"><code>ececdb3a126</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/4f5df98f6e31f2c7369e329e96a34119f94af223"><code>4f5df98f6e3</code></a>,
+<a href="https://github.com/JeremiahDJordan/cassandra/commit/1ea565c5b319a9e9258a58dc20e56321c9b71b00"><code>1ea565c5b31</code></a> (CASSANDRA-21671), <a href="https://github.com/JeremiahDJordan/cassandra/commit/ae493d880df3abb679ec52f7602bcaa24e9e7c44"><code>ae493d880df</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/5ac6f62ee4f2545c90f0562e273467da07991288"><code>5ac6f62ee4f</code></a> (CASSANDRA-19987), <a href="https://github.com/JeremiahDJordan/cassandra/commit/ac17666cdb8db97c1454de7a47132c555793eb0b"><code>ac17666cdb8</code></a> (writer abort
 logging, CASSANDRA-20695).</p>
-<p>These decide when an index is queryable. The rule they all serve: an index is queryable only when every live SSTable
-has complete, correct components for it.</p>
-<p>When the per-index components of an SSTable count as complete (<code>995d2963296</code>, <code>5e60c1c499a</code>, changed by
-<code>925eff0c75d</code>):</p>
+<p>These decide when an index is queryable. They check that an index covers the live SSTables it serves; the
+truncation check came after the series, in <a href="https://github.com/JeremiahDJordan/cassandra/commit/f26bddc2a8f9765c2216abc08b1155fe428742c9"><code>f26bddc2a8f</code></a>, and the <a href="audit-report.html#residuals">audit report</a> lists
+the windows that remain.</p>
+<p>When the per-index components of an SSTable count as complete (<a href="https://github.com/JeremiahDJordan/cassandra/commit/995d2963296bcb2c098a5632090d4282ef0080bf"><code>995d2963296</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/5e60c1c499afecd8de0fbd3eddb16f72e7b7891f"><code>5e60c1c499a</code></a>, changed by
+<a href="https://github.com/JeremiahDJordan/cassandra/commit/925eff0c75dfabdbbbdd39f1c0f61b5d2f42f4f7"><code>925eff0c75d</code></a>):</p>
 <pre class="mermaid">flowchart TD
-    P[&quot;per-index components of an SSTable&quot;] --&gt; CR{&quot;CREATE INDEX on an existing table?&quot;}
-    CR --&gt;|&quot;yes: components not built for this definition are discarded first&lt;br/&gt;(missing, empty or other-digest marker, Apache's)&quot;| I[&quot;incomplete: built from the data&quot;]
-    CR --&gt;|&quot;no&quot;| V{&quot;on-disk version&quot;}
-    V --&gt;|&quot;DataStax version&quot;| M{&quot;completion marker&quot;}
-    M --&gt;|&quot;empty, written by an earlier release&quot;| C[&quot;complete: used&quot;]
-    M --&gt;|&quot;format byte + SHA-256 of this index's definition&quot;| C
-    M --&gt;|&quot;missing, another definition's digest, other content&quot;| I
-    V --&gt;|&quot;Apache aa&quot;| AM{&quot;one of Apache's two valid markers?&quot;}
-    AM --&gt;|&quot;yes&quot;| C
-    AM --&gt;|&quot;no&quot;| I
+    P[&quot;per-index components of an SSTable&quot;] --&gt; CR{{&quot;CREATE INDEX on&lt;br/&gt;an existing table?&quot;}}
+    CR --&gt;|&quot;yes&quot;| D[&quot;discard the components not built&lt;br/&gt;for this definition (missing, empty or&lt;br/&gt;other-digest marker, Apache's)&quot;]
+    D --&gt; V
+    CR --&gt;|&quot;no&quot;| V{{&quot;on-disk version&quot;}}
+    V --&gt;|&quot;DataStax version&quot;| M{{&quot;completion marker&quot;}}
+    M --&gt;|&quot;empty, written by&lt;br/&gt;an earlier release&quot;| C1[&quot;complete: used&quot;]
+    M --&gt;|&quot;format byte + SHA-256&lt;br/&gt;of this index's definition&quot;| C1
+    M --&gt;|&quot;missing, another&lt;br/&gt;definition's digest,&lt;br/&gt;other content&quot;| I1[&quot;incomplete: built from the data&quot;]
+    V --&gt;|&quot;Apache aa&quot;| AM{{&quot;one of Apache's two&lt;br/&gt;valid markers?&quot;}}
+    AM --&gt;|&quot;yes&quot;| C2[&quot;complete: used&quot;]
+    AM --&gt;|&quot;no&quot;| I2[&quot;incomplete: built from the data&quot;]
 </pre>
-<p>SSTables added by a stream or an import (<code>c8e58e04874</code>):</p>
+<p>SSTables added directly by a stream or an import (<a href="https://github.com/JeremiahDJordan/cassandra/commit/c8e58e0487474b5616fde9136b4875e3e8243f5b"><code>c8e58e04874</code></a>):</p>
 <pre class="mermaid">flowchart TD
     S[&quot;a stream or an import receives SSTables&quot;] --&gt; B[&quot;build on them only the indexes that are missing,&lt;br/&gt;incomplete or written with an obsolete encoding&quot;]
-    B --&gt;|&quot;stopped or failed&quot;| F[&quot;the stream or import fails;&lt;br/&gt;the index stays queryable&quot;]
+    B --&gt;|&quot;stopped or failed&quot;| F[&quot;the stream or import fails;&lt;br/&gt;the index keeps its state&quot;]
     B --&gt;|&quot;built&quot;| A[&quot;add the SSTables to the table&quot;]
-    A --&gt; C{&quot;does every index include them?&quot;}
+    A --&gt; C{{&quot;does every index&lt;br/&gt;include them?&quot;}}
     C --&gt;|&quot;yes&quot;| OK[&quot;no change&quot;]
     C --&gt;|&quot;no, and its initial build is running&quot;| IB[&quot;the initial build builds them;&lt;br/&gt;checked again when it ends&quot;]
-    C --&gt;|&quot;no, otherwise&quot;| NQ[&quot;non-queryable, with a warning,&lt;br/&gt;until it is rebuilt&quot;]
+    IB --&gt;|&quot;still missing a live SSTable&quot;| NQ
+    C --&gt;|&quot;no, and still missing&lt;br/&gt;a live SSTable on a recheck&quot;| NQ[&quot;non-queryable, with a warning,&lt;br/&gt;until it is rebuilt&quot;]
 </pre>
 <p>Check:</p>
 <ul>
-<li>Every path that makes an index queryable (initial build, rebuild, restart, import, stream, truncate) checks the
-live SSTables, not a snapshot taken before the build.</li>
+<li>Every path that makes an index queryable or non-queryable (initial build, rebuild, restart, import, stream) checks
+the live SSTables, not a snapshot taken before the build; check which live SSTables each check includes, and when.</li>
 <li>A failed or stopped build leaves the index non-queryable, or fails only the stream or import, as the message says.</li>
 <li>Ownership and locks: who may write or delete an SSTable's component files while another build runs, and that a
 dropped index's build can't change the state of a new index of the same name.</li>
@@ -323,13 +383,13 @@ dropped index's build can't change the state of a new index of the same name.</l
 asserts that its pause was reached: a pause on a call that no longer happens passes without testing anything.</li>
 </ul>
 <h3 id="4-memtables-and-the-write-path">4. Memtables and the write path</h3>
-<p>Trie memtables: <code>1d5c08a0ffb</code>, <code>6aea1e383fa</code>, <code>fcb65f1ab87</code>, <code>572931a4f9b</code> and <code>a6b52517ff5</code> (CNDB-19682),
-<code>ce4eebbd4f1</code>, <code>d4a5fc7aa74</code> (CNDB-19681), <code>ecd92655eec</code>.
-SAI memtable index: <code>ede0074ea84</code>, <code>3db4c8633e2</code>, <code>e630511ed8c</code>, <code>fbc982440ee</code>, <code>325279bbb41</code>, <code>5748d3e7455</code>,
-<code>c5a989ceee0</code>, <code>f6ac88c6c17</code>, <code>967387eafc2</code>, <code>15d5fbcac7e</code>.
-Skip-list memtables and size limits: <code>0235c5d3984</code>, <code>2c5484805c2</code>, <code>37497e30e07</code>.
-Indexers: <code>86616f7bf63</code> (CASSANDRA-19675).</p>
-<p>Two writes racing on one partition of a skip-list memtable (<code>0235c5d3984</code>):</p>
+<p>Trie memtables: <a href="https://github.com/JeremiahDJordan/cassandra/commit/1d5c08a0ffbf5d0e821e6609420a6bdade3c23e6"><code>1d5c08a0ffb</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/6aea1e383fa4a92e979594e5fcb6a0dcf06c3bab"><code>6aea1e383fa</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/fcb65f1ab87c93ab0f4f1f1c788a5ffd31baa63f"><code>fcb65f1ab87</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/572931a4f9b32e21f8217beeec8c6b3ff8ab4ab9"><code>572931a4f9b</code></a> and <a href="https://github.com/JeremiahDJordan/cassandra/commit/a6b52517ff56d4ff48c90c162528538d502a3354"><code>a6b52517ff5</code></a> (CNDB-19682),
+<a href="https://github.com/JeremiahDJordan/cassandra/commit/ce4eebbd4f15a594cf9af35ddcaec14b27497c25"><code>ce4eebbd4f1</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/d4a5fc7aa74b3605c8a6917dea2d14db2b037512"><code>d4a5fc7aa74</code></a> (CNDB-19681), <a href="https://github.com/JeremiahDJordan/cassandra/commit/ecd92655eec6b921b5a29ff8fee3824fa806c1f7"><code>ecd92655eec</code></a>.
+SAI memtable index: <a href="https://github.com/JeremiahDJordan/cassandra/commit/ede0074ea84ce12a3a245eb6136d6a169b866a28"><code>ede0074ea84</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/3db4c8633e247f049d852fee787eebbbd82ee259"><code>3db4c8633e2</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/e630511ed8c2e173188283f2f734e9f4a50aaabc"><code>e630511ed8c</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/fbc982440ee46705ca0c08c480b7d6ef12de408e"><code>fbc982440ee</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/325279bbb41a3b8ea02a0fe287f64d7b9404a01e"><code>325279bbb41</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/5748d3e7455c63beb01c19b17db36cc7cff62d32"><code>5748d3e7455</code></a>,
+<a href="https://github.com/JeremiahDJordan/cassandra/commit/c5a989ceee0b868fc817235b20c479bae9ab1779"><code>c5a989ceee0</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/f6ac88c6c17f689069a4369eb8e59cddffdf8d5a"><code>f6ac88c6c17</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/967387eafc240c37f8e8ada42d495c497604394a"><code>967387eafc2</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/15d5fbcac7ed2920de868fd5e3725416d1fe71b8"><code>15d5fbcac7e</code></a>.
+Skip-list memtables and size limits: <a href="https://github.com/JeremiahDJordan/cassandra/commit/0235c5d398482723b2fc97271205ce0b97a9f7c7"><code>0235c5d3984</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/2c5484805c2206b373744ef83a6a6127166d2d8b"><code>2c5484805c2</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/37497e30e07e3d66af75bc2ae8611fbffa9d1e3a"><code>37497e30e07</code></a>.
+Indexers: <a href="https://github.com/JeremiahDJordan/cassandra/commit/86616f7bf63a1c09ef43566831649c3da620a44d"><code>86616f7bf63</code></a> (CASSANDRA-19675).</p>
+<p>Two writes racing on one partition of a skip-list memtable (<a href="https://github.com/JeremiahDJordan/cassandra/commit/0235c5d398482723b2fc97271205ce0b97a9f7c7"><code>0235c5d3984</code></a>):</p>
 <pre class="mermaid">sequenceDiagram
     participant W1 as Write 1
     participant W2 as Write 2
@@ -341,37 +401,38 @@ Indexers: <code>86616f7bf63</code> (CASSANDRA-19675).</p>
     W1-&gt;&gt;P: CAS of attempt 1 loses
     W1-&gt;&gt;I: events of attempt 2
     W1-&gt;&gt;P: CAS of attempt 2 wins
-    Note over I: the events of the lost attempt removed values the row still holds
-    Note over W1,I: After, on tables with SAI: merge and CAS under the partition's lock,&lt;br/&gt;events held per attempt, dropped for a lost attempt, delivered once the update is applied
+    Note over I: the events of the lost attempt&lt;br/&gt;removed values the row still holds
+    Note over W1,I: After, on tables with SAI: merge and CAS under the partition's lock,&lt;br/&gt;events held per attempt, dropped for a lost attempt,&lt;br/&gt;delivered once the update is applied
 </pre>
 <p>Check:</p>
 <ul>
 <li>An index event is delivered once per applied update, in apply order, and never for an update that wasn't applied.</li>
 <li>An update that keeps a value in a row doesn't remove that value from the index; a deletion or expiry removes
 only what it shadows.</li>
-<li><code>0235c5d3984</code> takes a partition lock only for tables whose indexers ask for atomic updates; NEWS.txt gives the
+<li><a href="https://github.com/JeremiahDJordan/cassandra/commit/0235c5d398482723b2fc97271205ce0b97a9f7c7"><code>0235c5d3984</code></a> takes a partition lock only for tables whose indexers ask for atomic updates; NEWS.txt gives the
 throughput cost with many writers on one partition.</li>
 </ul>
 <h3 id="5-query-semantics">5. Query semantics</h3>
-<p>Restored from Apache: <code>8faae9aa793</code> (equivalent of CASSANDRA-19177), <code>190070cc374</code> (20191), <code>91dd80addba</code> (20243),
-<code>e1406d1499a</code> (20866), <code>b6c0e11a1ab</code> (term size guardrails, 19493 and 18926), <code>a11b47ad8ac</code> (19544), <code>c0a1d0cba68</code>
-(19953), <code>214dc9b9b8d</code> (part of 20313), <code>42e6e2ec137</code> (21525), <code>13731e74fd5</code> (non-float vectors, 18715).
-Same case as an Apache ticket, different behaviour: <code>8d9619fa249</code> (CASSANDRA-21863 rejects the query; this
-evaluates it per element).
-DataStax-only fixes: <code>f723d246377</code> (equivalent of CASSANDRA-20258), <code>cd3ce5321b2</code>, <code>fd61c6873d4</code>, <code>e70ba28bab2</code>, <code>d7b5dd2f369</code>, <code>f6d46514c01</code>,
-<code>5c4ac0ce4c9</code>, <code>11abb672196</code>, <code>8defe3bc673</code>, <code>4a72521b752</code>, <code>27de9b32cb3</code>, <code>a5bb64889ef</code>, <code>2f1db37a433</code>,
-<code>e62738daee6</code>.</p>
+<p>Restored from Apache: <a href="https://github.com/JeremiahDJordan/cassandra/commit/8faae9aa793178fd68f6ca4ca523efcffab9427f"><code>8faae9aa793</code></a> (equivalent of CASSANDRA-19177), <a href="https://github.com/JeremiahDJordan/cassandra/commit/190070cc37453b06bcfd595256cc7f046f98eeec"><code>190070cc374</code></a> (20191), <a href="https://github.com/JeremiahDJordan/cassandra/commit/91dd80addba454a1d636d6a3bc5a7f2cf36a36bd"><code>91dd80addba</code></a> (20243),
+<a href="https://github.com/JeremiahDJordan/cassandra/commit/e1406d1499a24cd2e9e8ea3399563765746e3be7"><code>e1406d1499a</code></a> (20866), <a href="https://github.com/JeremiahDJordan/cassandra/commit/b6c0e11a1abd20f5da5317e8f0f333a6ccc171a8"><code>b6c0e11a1ab</code></a> (term size guardrails, 19493 and 18926), <a href="https://github.com/JeremiahDJordan/cassandra/commit/a11b47ad8accb96fd0795ad2a1937cd03fd6b222"><code>a11b47ad8ac</code></a> (19544), <a href="https://github.com/JeremiahDJordan/cassandra/commit/c0a1d0cba685b919b4d71691567c3e4ff2b10743"><code>c0a1d0cba68</code></a>
+(19953), <a href="https://github.com/JeremiahDJordan/cassandra/commit/42e6e2ec1374b9913b793536c57e6aa05064e66e"><code>42e6e2ec137</code></a> (21525), <a href="https://github.com/JeremiahDJordan/cassandra/commit/13731e74fd50dd900a1fbab92300fe4749c5ec18"><code>13731e74fd5</code></a> (non-float vectors, 18715), <a href="https://github.com/JeremiahDJordan/cassandra/commit/f723d2463771b3f424c876eb4bcbe55f077485c1"><code>f723d246377</code></a> (equivalent of 20258).
+Same case as an Apache ticket, handled differently: <a href="https://github.com/JeremiahDJordan/cassandra/commit/8d9619fa2490c9c7e2c9d84b5f636dfacb2cba16"><code>8d9619fa249</code></a> (CASSANDRA-21863 rejects the query; this
+evaluates it per element), <a href="https://github.com/JeremiahDJordan/cassandra/commit/214dc9b9b8dea19505a0e13b45f9631abc0cdb5b"><code>214dc9b9b8d</code></a> (empty bounds; CASSANDRA-20313's problem, fixed another way).
+DataStax-only fixes: <a href="https://github.com/JeremiahDJordan/cassandra/commit/cd3ce5321b2d0a2f19d42e87996df16e1d28852d"><code>cd3ce5321b2</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/fd61c6873d4282f752235cd7aa9e55cd68034379"><code>fd61c6873d4</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/e70ba28bab260095b825691c2efed88be9b05392"><code>e70ba28bab2</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/d7b5dd2f36977c867fbb9a8614af9cb36ec70082"><code>d7b5dd2f369</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/f6d46514c0108e81de49e3da63c83672cd33bf8d"><code>f6d46514c01</code></a>,
+<a href="https://github.com/JeremiahDJordan/cassandra/commit/5c4ac0ce4c9d08879c2be9d3379d9b8570c94967"><code>5c4ac0ce4c9</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/11abb67219640e5a649b087e4ed019efa04f672d"><code>11abb672196</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/8defe3bc67337977aa7b0428d6df74124f19f68f"><code>8defe3bc673</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/4a72521b752dfd884b3b8330e488a881e739cd7d"><code>4a72521b752</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/27de9b32cb33b0bf79db30c2405cba7cd3fb583d"><code>27de9b32cb3</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/a5bb64889efbbea4f3ca99705592b14dbab6b6e8"><code>a5bb64889ef</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/2f1db37a433cd98f81affa11344bedcaaa720d4e"><code>2f1db37a433</code></a>,
+<a href="https://github.com/JeremiahDJordan/cassandra/commit/e62738daee62928ddace6dbedc869bf5010c8df1"><code>e62738daee6</code></a>.</p>
 <p>Check:</p>
 <ul>
-<li>An SAI query returns the same rows as the same query with <code>ALLOW FILTERING</code> on a table without indexes. Tests
-compare with that table, from the memtable, from SSTables and after compaction.</li>
+<li>An SAI query returns the same rows as <code>ALLOW FILTERING</code> without the index, where both use the same matching and
+the index covers the same values (an analyzed index changes what <code>=</code> matches; empty values of non-literal types
+aren't indexed). Tests compare from the memtable, from SSTables and after compaction.</li>
 <li>Analyzed columns: <code>:</code>, <code>=</code>, <code>CONTAINS</code> and their negations each say which analyzer applies.</li>
 <li>Negations (<code>!=</code>, <code>NOT IN</code>, <code>NOT CONTAINS</code>, <code>NOT CONTAINS KEY</code>) never subtract index matches that weren't checked
 against the row.</li>
 </ul>
 <h3 id="6-static-rows-or-paging-and-replica-filtering-protection">6. Static rows, OR, paging and replica filtering protection</h3>
-<p><code>925eff0c75d</code>, <code>3c5bbbcc208</code>, <code>a8c4b2529ec</code>, <code>8af41195ad5</code>, <code>3f9e28fc617</code>, <code>914fcd63296</code>, <code>d2fbec59d50</code>,
-<code>6d42b5aea4c</code>, <code>406eb1cceaf</code>, <code>bef8706e945</code>, <code>d00fa3410ea</code>.</p>
+<p><a href="https://github.com/JeremiahDJordan/cassandra/commit/925eff0c75dfabdbbbdd39f1c0f61b5d2f42f4f7"><code>925eff0c75d</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/3c5bbbcc20833c99748fa47ad38b94b86bc0954f"><code>3c5bbbcc208</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/a8c4b2529ec9085b9d5e0f0e9a2df419af31f491"><code>a8c4b2529ec</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/8af41195ad53eeb2a7ed618d5aa466a62afd8f7f"><code>8af41195ad5</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/3f9e28fc617a99416e041126ce37217575130251"><code>3f9e28fc617</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/914fcd6329608d8a217fe7695db8fe4f6df44b1e"><code>914fcd63296</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/d2fbec59d50ed38fb424cf98da9a341aaee38e86"><code>d2fbec59d50</code></a>,
+<a href="https://github.com/JeremiahDJordan/cassandra/commit/6d42b5aea4c1bafda4120d041bd05a35c6265864"><code>6d42b5aea4c</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/406eb1cceafeba6bf1702aed69c87ee2ea011657"><code>406eb1cceaf</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/bef8706e945ac429680af6f6b9132d04c98ff502"><code>bef8706e945</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/d00fa3410eaa1c1a9d17b85e7b5eb12648f9462f"><code>d00fa3410ea</code></a>.</p>
 <p>Partitions that have only a static row, and filters that mix static and regular columns, are where SAI, <code>RowFilter</code>,
 limits and the coordinator's reconciliation disagreed.</p>
 <p>Check:</p>
@@ -379,12 +440,12 @@ limits and the coordinator's reconciliation disagreed.</p>
 <li>A replica returns a partition for its static row alone only when that row satisfies the filter on its own.</li>
 <li>Limits, <code>PER PARTITION LIMIT</code> and paging count those partitions.</li>
 <li>Replica filtering protection reads the whole partition from a replica whose static row is stricter than the
-merged one. Apache Cassandra 5.0 has the same gap; the message of <code>d00fa3410ea</code> gives the case.</li>
+merged one. Apache Cassandra 5.0 has the same gap; the message of <a href="https://github.com/JeremiahDJordan/cassandra/commit/d00fa3410eaa1c1a9d17b85e7b5eb12648f9462f"><code>d00fa3410ea</code></a> gives the case.</li>
 <li>What a replica holds while it waits to decide is bounded by the tombstone failure threshold.</li>
 </ul>
 <h3 id="7-order-by-and-vector-search">7. ORDER BY and vector search</h3>
-<p><code>3e1c35ba143</code> (CASSANDRA-19661), <code>3d5f5d1e18e</code> (tests from 20086), <code>40881baecc3</code>, <code>d2e480e4ca2</code>, <code>50deef58ddf</code>,
-<code>d98b674b593</code>, <code>6d56a449bca</code>, <code>be474291df8</code>.</p>
+<p><a href="https://github.com/JeremiahDJordan/cassandra/commit/3e1c35ba1432c4e64a677af993bb90d15a02d837"><code>3e1c35ba143</code></a> (CASSANDRA-19661), <a href="https://github.com/JeremiahDJordan/cassandra/commit/3d5f5d1e18ee8a78ed5f099e4b1435d8d6cdac8b"><code>3d5f5d1e18e</code></a> (tests from 20086), <a href="https://github.com/JeremiahDJordan/cassandra/commit/40881baecc37962c406b0a403f420ab52a3220cb"><code>40881baecc3</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/d2e480e4ca2a2fd115fa202d47416b0feaff7787"><code>d2e480e4ca2</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/50deef58ddfd61a4eb38ed6b277248e4abe13717"><code>50deef58ddf</code></a>,
+<a href="https://github.com/JeremiahDJordan/cassandra/commit/d98b674b5936a2e5e872f99d635ae22f157457fd"><code>d98b674b593</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/6d56a449bcad7a81cd681a6076454f97dc134b97"><code>6d56a449bca</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/be474291df80adc408a17a8277bd89121bd4df2a"><code>be474291df8</code></a>.</p>
 <p>Check:</p>
 <ul>
 <li>Each partition and row is returned at most once, and the limit counts rows, not keys.</li>
@@ -392,47 +453,18 @@ merged one. Apache Cassandra 5.0 has the same gap; the message of <code>d00fa341
 <li>Vector recall tests check recall over many queries, not one; a single graph search can miss a reachable row.</li>
 </ul>
 <h3 id="8-compaction-and-expiration">8. Compaction and expiration</h3>
-<p><code>67f7c0f321a</code> and <code>e020bdb9709</code> (CASSANDRA-20829, compaction and UCS expiration tasks), <code>af4e52a0c11</code>.</p>
-<p>Check that dropping a fully expired SSTable still tells the indexes about its rows, and that compaction doesn't read
-an SSTable it drops whole.</p>
-<h3 id="9-documentation-and-tests-only">9. Documentation and tests only</h3>
-<p><code>139023540a7</code> (Apache regression tests for fixes this SAI already had), <code>712213c8618</code> (differences from Apache
-Cassandra 5.0), <code>b249e01ec29</code>, <code>72d4f619b3a</code>, <code>c0a17e8c373</code>, <code>79838eeeace</code>, and <code>7315a1b014e</code>, which registers the
+<p><a href="https://github.com/JeremiahDJordan/cassandra/commit/67f7c0f321ae6f1eb9186af3f0a3b020397939dd"><code>67f7c0f321a</code></a> and <a href="https://github.com/JeremiahDJordan/cassandra/commit/e020bdb9709227b536a4e466a53c2d38d0ad2b10"><code>e020bdb9709</code></a> (CASSANDRA-20829, compaction and UCS expiration tasks), <a href="https://github.com/JeremiahDJordan/cassandra/commit/af4e52a0c119fbecc91d715185c8263b2b98e89a"><code>af4e52a0c11</code></a>.</p>
+<p>Check that dropping a fully expired SSTable still tells the indexes that ask for it about its rows, and that
+compaction and expiration read such an SSTable only when an index asks; SAI doesn't.</p>
+<h3 id="9-documentation-tests-and-the-segments-table-name">9. Documentation, tests and the segments table name</h3>
+<p><a href="https://github.com/JeremiahDJordan/cassandra/commit/139023540a7146ad4923d6f1bd9fc39d8c97e50d"><code>139023540a7</code></a> (Apache regression tests for fixes this SAI already had), <a href="https://github.com/JeremiahDJordan/cassandra/commit/712213c8618f82c931c5e42919a4a2670dbc5dc7"><code>712213c8618</code></a> (differences from Apache
+Cassandra 5.0), <a href="https://github.com/JeremiahDJordan/cassandra/commit/b249e01ec2928948c34cc7997db766260304ae51"><code>b249e01ec29</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/72d4f619b3a5aa022d4ff34837fe0054047de44a"><code>72d4f619b3a</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/c0a17e8c373463dd30bdb174b7de0a2731b1a1c9"><code>c0a17e8c373</code></a>, <a href="https://github.com/JeremiahDJordan/cassandra/commit/79838eeeace5fe3b7facabc7264d5214bbe608fe"><code>79838eeeace</code></a>, and <a href="https://github.com/JeremiahDJordan/cassandra/commit/7315a1b014e5560db71070b3e2f5c9fb93edc781"><code>7315a1b014e</code></a>, which registers the
 SAI segments virtual table under the name tools written for Apache Cassandra expect.</p>
 <p>Check that each documented difference matches the code.</p>
-<h2 id="decisions-already-made">Decisions already made</h2>
-<p>A review should check that the code and the documentation agree with these, not reopen them:</p>
-<ul>
-<li><strong>Replica filtering stays strict by default.</strong> CASSANDRA-19018's relaxed filtering is restored behind
-<code>sai_options.non_strict_replica_filtering_enabled</code> (default <code>false</code>), because it can make queries much more
-expensive.</li>
-<li><strong>CASSANDRA-18490's checksum check on partial builds is on by default</strong>, as in Apache Cassandra.</li>
-<li><strong>A null element of a filtered single-column <code>IN</code> is ignored</strong>, as in Apache Cassandra 5.0. An earlier mainline
-commit rejected it.</li>
-<li><strong><code>CONTAINS</code> on an unindexed frozen collection</strong> is evaluated per element; CASSANDRA-21863 rejects the query.</li>
-<li><strong>Documented deviations:</strong> CASSANDRA-18730 (the vector dimension guardrail default), CASSANDRA-20334
-(<code>prioritize_over_legacy_index</code> defaults to <code>true</code>), CASSANDRA-18782 (unknown options accepted with a warning)
-and CASSANDRA-21515 (a full rebuild of one index rewrites the shared per-SSTable components).</li>
-<li><strong>Deferred to a 6.0-based line:</strong> <code>BETWEEN</code> (CASSANDRA-19604, 19688, 19878, 20154) and CASSANDRA-18492.</li>
-<li><strong>Read, not written:</strong> these commits read Apache's <code>aa</code> format through a read-only version; nothing in them writes
-it.</li>
-</ul>
-<h2 id="checks-that-apply-to-every-commit">Checks that apply to every commit</h2>
-<ol>
-<li><strong>Tests fail without the fix.</strong> For a behaviour change, revert the production change and run the commit's new
-tests: at least one must fail. A test that passes either way tests nothing.</li>
-<li><strong>Tests match their neighbours.</strong> New tests use the same base class and helpers as the tests next to them
-(<code>SAITester</code>/<code>CQLTester</code>, <code>createTable</code>, <code>execute</code>, <code>assertRows</code>, <code>flush</code>, <code>compact</code>), and in-JVM dtests use
-<code>cluster.coordinator(n).execute</code>.</li>
-<li><strong>Comments are short and state facts.</strong> No comments that narrate the change or the bug's history.</li>
-<li><strong>Internode behaviour depends on the messaging version only.</strong></li>
-<li><strong>No new cost on the read and write hot paths</strong> without a reason the message gives.</li>
-<li><strong>Edge cases off the intended use</strong> are refused with a clear error or documented, not handled with extra
-mechanisms.</li>
-</ol>
 <h2 id="later-commits-on-the-same-code">Later commits on the same code</h2>
-<p>These commits on mainline after the series, up to <code>3f458bfcd1d</code>, change the index code or <code>RowFilter</code>, or SAI reads
-to older nodes, or a test this guide names. Read them with the commit they change:</p>
+<p>These commits on mainline after the series, up to <a href="https://github.com/JeremiahDJordan/cassandra/commit/5458f446c35ac71f2dc0ad68dc69f8130661301f"><code>5458f446c35</code></a>, change the index code, <code>RowFilter</code>, what is sent to
+older nodes, a test this guide names, or the harness for testing with Apache Cassandra nodes. Read each with the
+series commit it changes:</p>
 <div class="tbl"><table>
 <thead>
 <tr>
@@ -442,138 +474,154 @@ to older nodes, or a test this guide names. Read them with the commit they chang
 </thead>
 <tbody>
 <tr>
-<td><code>420050d1ca9</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/420050d1ca92dd8840166e6755d0ca84f7b63e5c"><code>420050d1ca9</code></a></td>
 <td>Fix a NullPointerException in ANN ordering by a primary key vector with approximate scores</td>
 </tr>
 <tr>
-<td><code>f26bddc2a8f</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/f26bddc2a8f9765c2216abc08b1155fe428742c9"><code>f26bddc2a8f</code></a></td>
 <td>Don't make an SAI index queryable on truncate when it misses a kept SSTable</td>
 </tr>
 <tr>
-<td><code>383d01820d5</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/383d01820d538bdddeaabc25240d3990e8a17839"><code>383d01820d5</code></a></td>
 <td>Combine the term ranges of SAI segments as each segment computes its own</td>
 </tr>
 <tr>
-<td><code>8f3696dcb89</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/8f3696dcb899930b039e8dc8f73836dca2820b13"><code>8f3696dcb89</code></a></td>
 <td>Compute SAI decimal range estimates with a bounded precision</td>
 </tr>
 <tr>
-<td><code>d53d02c5a61</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/d53d02c5a61a1705b07c6db26a6cca38917264ed"><code>d53d02c5a61</code></a></td>
 <td>Accept SAI analyzer configs without a tokenizer</td>
 </tr>
 <tr>
-<td><code>4531842dd36</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/4531842dd36820caca9598061e4662ad355a65cf"><code>4531842dd36</code></a></td>
 <td>Warn on SAI n-gram analyzers named &quot;nGram&quot;</td>
 </tr>
 <tr>
-<td><code>22f21a98b24</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/22f21a98b2460103490be523bfc773f512855c4c"><code>22f21a98b24</code></a></td>
 <td>Finish an index build only once every builder of every building-support group is done</td>
 </tr>
 <tr>
-<td><code>ba219866320</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/ba219866320c6b55c251f61867c27be54386d9c0"><code>ba219866320</code></a></td>
 <td>Keep the SSTables of a build listed for the indexes still building them</td>
 </tr>
 <tr>
-<td><code>b7a7722a918</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/b7a7722a918e26d96b0c529ee6a54b0538a2d054"><code>b7a7722a918</code></a></td>
 <td>Filter LIKE suffix and contains literals without compiling an automaton unless an index searches them</td>
 </tr>
 <tr>
-<td><code>59ebb026f4e</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/59ebb026f4e7a625fd87a577f56ec04555df1f7c"><code>59ebb026f4e</code></a></td>
 <td>Send replica write warnings to the client</td>
 </tr>
 <tr>
-<td><code>e2d9c3f10ec</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/e2d9c3f10ec610a0b29c34f5c6becd6f28858951"><code>e2d9c3f10ec</code></a></td>
 <td>Warn when SAI doesn't index an oversized term</td>
 </tr>
 <tr>
-<td><code>338b9eb42df</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/338b9eb42df6bf74d24817393c01a973ae4555be"><code>338b9eb42df</code></a></td>
 <td>Treat an SAI IN on an analyzed column as a disjunction of analyzed equalities</td>
 </tr>
 <tr>
-<td><code>575b7e50c50</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/575b7e50c504411798a73f67ce95cd30343c3b20"><code>575b7e50c50</code></a></td>
 <td>Don't list unwritten SAI components in the TOC of streamed and rewritten SSTables</td>
 </tr>
 <tr>
-<td><code>faac7bd1f1f</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/faac7bd1f1f96db446ca35fe97746233abb7c820"><code>faac7bd1f1f</code></a></td>
 <td>Write the sstable versions of Apache Cassandra outside of storage compatibility mode HCD_1</td>
 </tr>
 <tr>
-<td><code>9c592dec741</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/9c592dec7412012e0bd34f0c5c491353d9c8aa6f"><code>9c592dec741</code></a></td>
 <td>Compare cell values across accessors when cleaning up legacy index entries</td>
 </tr>
 <tr>
-<td><code>ad9b5bd7fe9</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/ad9b5bd7fe9b4d6b801ca08b8e8d19be57526057"><code>ad9b5bd7fe9</code></a></td>
 <td>Decode counters for != in row filters</td>
 </tr>
 <tr>
-<td><code>50cfa53fc56</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/50cfa53fc566d7966fde11ca648ea622210b1bf2"><code>50cfa53fc56</code></a></td>
 <td>Always gossip the SAI index status in the compact format</td>
 </tr>
 <tr>
-<td><code>4109fa4ab63</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/4109fa4ab63ea6f080655f8bb2cac74a706da6f6"><code>4109fa4ab63</code></a></td>
 <td>Don't send multi-range SAI reads to nodes below DS 10</td>
 </tr>
 <tr>
-<td><code>bb6055c8aff</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/bb6055c8aff07cc5e9f62a29260203904c04b44b"><code>bb6055c8aff</code></a></td>
 <td>Don't send synthetic score columns to nodes below DS 10</td>
 </tr>
 <tr>
-<td><code>331ca377e51</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/d8336fbe240d640325f9e90a316a3c91a61c4066"><code>d8336fbe240</code></a></td>
+<td>Send unknown column and table failures to Apache Cassandra nodes as INCOMPATIBLE_SCHEMA</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/331ca377e51b2d0ba1fba5c06cee1441d8602e1a"><code>331ca377e51</code></a></td>
 <td>Compare the excluded values of an SAI range on a literal column with the value</td>
 </tr>
 <tr>
-<td><code>951daaa61aa</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/951daaa61aab170bf63b899afa59f086521b3f7e"><code>951daaa61aa</code></a></td>
 <td>Filter unindexed map entries that don't fit in an SAI entry term</td>
 </tr>
 <tr>
-<td><code>b01b03f6c67</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/b01b03f6c679019a546e67ee526b46826c128821"><code>b01b03f6c67</code></a></td>
 <td>Refuse SAI-filtered != and non-strict IN while Apache Cassandra 5.0 nodes can be contacted</td>
 </tr>
 <tr>
-<td><code>72321e7e573</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/72321e7e5734c0b261fb0a7f0b17d020c7aea752"><code>72321e7e573</code></a></td>
 <td>Refuse SAI-filtered CONTAINS on frozen collections while Apache Cassandra 5.0 nodes can be contacted</td>
 </tr>
 <tr>
-<td><code>b6565d334eb</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/b6565d334eb9c3dbf3b3a9bd841f93c401f60e0f"><code>b6565d334eb</code></a></td>
 <td>Check single-row graph search apart from brute force in VectorKeyRestrictedOnPartitionTest</td>
 </tr>
 <tr>
-<td><code>c7e188450fa</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/53d8b40666a757c811800e71219b709ca6d003d8"><code>53d8b40666a</code></a></td>
+<td>Count disconnected outbound connections at the node's known messaging version</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/c7e188450faac378950ce141f225b5b4a1c45a89"><code>c7e188450fa</code></a></td>
 <td>Compare != and NOT IN with the analyzer of = on a column whose SAI index serves = as a match</td>
 </tr>
 <tr>
-<td><code>ce5b09f969a</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/ce5b09f969a49aaf370db84b1e188bf5efdca21b"><code>ce5b09f969a</code></a></td>
 <td>Match no row with an SAI search of an analyzed value without terms</td>
 </tr>
 <tr>
-<td><code>a5c101d830f</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/a5c101d830f65c7a59d4f118af5023bc939625c4"><code>a5c101d830f</code></a></td>
 <td>Check every analyzed SAI term against the term size guardrail</td>
 </tr>
 <tr>
-<td><code>1552286f643</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/1552286f6434b6ab688e61d1b9a5a8b1d012e0ea"><code>1552286f643</code></a></td>
 <td>Widen SAI builds for a numbering change only in full rebuilds, over complete components</td>
 </tr>
 <tr>
-<td><code>a5aa8d8b25e</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/a5aa8d8b25e95c9cab8a85520fac399566ea9c3d"><code>a5aa8d8b25e</code></a></td>
 <td>Test RowFilter's partitions starting with a marker and the bound on deletions SAI holds</td>
 </tr>
 <tr>
-<td><code>567be9c4212</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/6f954252729408b00424621750ea7265db94bac4"><code>6f954252729</code></a></td>
+<td>Add an in-JVM dtest harness for clusters mixing nodes of this build with Apache Cassandra nodes</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/567be9c421233486f7f2a31b99518c30a24f5147"><code>567be9c4212</code></a></td>
 <td>Mark null components of OSS50 byte-comparable sequences as Apache Cassandra 5.0 does</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/6168b55d8d07b2671b5f7d47e227f6aa978877d1"><code>6168b55d8d0</code></a></td>
+<td>Compare applied schemas in <code>ApacheMixedClusterTestBase#schemaChange</code></td>
 </tr>
 </tbody>
 </table></div>
 <h2 id="evidence">Evidence</h2>
 <ul>
-<li>Build and lint pass at every commit of the series.</li>
-<li>The SAI test sweep at the default on-disk version (19,497 unit tests and 565 in-JVM dtests) and at version GA with
-the vector tests (21,139 unit tests and 575 in-JVM dtests): 0 failures.</li>
-<li>The last full run of the branch with the series: 40,209 unit tests with 0 failures, and 2,545 in-JVM dtests with 5
-errors, all <code>HostReplacementTest</code> with its port in use by another process (3/3 pass in reruns). Mainline with the
-series landed: 40,341 unit tests and 2,546 in-JVM dtests, 0 failures.</li>
-<li>18 commits record a run of their new tests failing before the fix.</li>
+<li>On earlier bases of the series: build and lint passed at commits 002 to 105 on <a href="https://github.com/JeremiahDJordan/cassandra/commit/4ee9a6be339fc77fac26494076b0543c24b85d47"><code>4ee9a6be339</code></a>, and on
+<a href="https://github.com/JeremiahDJordan/cassandra/commit/969923965e8de828c85df955e3ba9fba3b791567"><code>969923965e8</code></a> the SAI test sweep passed at the default on-disk version (19,497 unit tests and 565 in-JVM dtests)
+and at version GA with the vector tests (21,139 unit tests and 575 in-JVM dtests).</li>
+<li>The full suites on the published tip <a href="https://github.com/JeremiahDJordan/cassandra/commit/5458f446c35ac71f2dc0ad68dc69f8130661301f"><code>5458f446c35</code></a> (the series and the later commits above): 40,906 unit tests (277
+skipped) and 2,615 in-JVM dtests (23 skipped) on JDK 11, 0 failures. Not run: Python dtests, JDK 17 and 21.</li>
+<li>22 commits record a run of their new tests failing without the fix, or without the part of it named; the
+<a href="audit-report.html#series">audit report</a> gives each commit's test evidence.</li>
 <li><code>VectorKeyRestrictedOnPartitionTest</code> was flaky with and without the series: a single graph search under a one-key
-filter can miss one row, which brute force finds. <code>b6565d334eb</code> changes the test.</li>
+filter can miss one row, which brute force finds. <a href="https://github.com/JeremiahDJordan/cassandra/commit/b6565d334eb9c3dbf3b3a9bd841f93c401f60e0f"><code>b6565d334eb</code></a> changes the test.</li>
 </ul>
 <p>The <a href="audit-report.html">audit report</a> has the per-run numbers, every failure seen and its cause, and the issues filed
 for bugs that aren't fixed here.</p>
@@ -581,14 +629,14 @@ for bugs that aren't fixed here.</p>
 <p>Give the reviewer one commit, or one area above, at a time, with:</p>
 <ol>
 <li>the commit (<code>git show &lt;sha&gt;</code>) and, for an adapted commit, the Apache commit from its provenance line;</li>
-<li>the &quot;Check&quot; list of its area and the <a href="#checks-that-apply-to-every-commit">checks that apply to every commit</a>;</li>
+<li>the &quot;Check&quot; list of its area and the <a href="#how-to-review-a-commit">checks for every commit</a>;</li>
 <li>the instruction to report each finding with a severity (blocker, should fix, nit), the file and line, a concrete
 failing case, and a suggested fix, and to say plainly when it found nothing.</li>
 </ol>
 <p>Then triage: fix correctness, data loss and missing tests; decline style preferences and pre-existing issues outside
 the commit with a one-line reason, and file those separately if they are real bugs.</p>
 <h2 id="appendix-every-commit">Appendix: every commit</h2>
-<p>In branch order; <code>1d5c08a0ffb</code> landed before the range. <code>#</code> is the commit's number in the audit report's series
+<p>In branch order; <a href="https://github.com/JeremiahDJordan/cassandra/commit/1d5c08a0ffbf5d0e821e6609420a6bdade3c23e6"><code>1d5c08a0ffb</code></a> landed before the range. <code>#</code> is the commit's number in the audit report's series
 table. &quot;Port of&quot; with a commit link means the message carries an <code>Adapted from</code> line for that source; &quot;Tests from&quot;
 means only the tests came from it. A source without a commit link is named in the message text only.</p>
 <div class="tbl"><table>
@@ -605,7 +653,7 @@ means only the tests came from it. A source without a commit link is named in th
 <tbody>
 <tr>
 <td>001</td>
-<td><code>1d5c08a0ffb</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/1d5c08a0ffbf5d0e821e6609420a6bdade3c23e6"><code>1d5c08a0ffb</code></a></td>
 <td>Return only the selected static columns from a trie memtable partition read with no slice</td>
 <td>DataStax-only fix</td>
 <td>+312</td>
@@ -613,7 +661,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>002</td>
-<td><code>6aea1e383fa</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/6aea1e383fa4a92e979594e5fcb6a0dcf06c3bab"><code>6aea1e383fa</code></a></td>
 <td>Don't reset TrieMemtableStage3's partition counters on a partition deletion</td>
 <td>DataStax-only fix</td>
 <td>+139</td>
@@ -621,7 +669,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>003</td>
-<td><code>fcb65f1ab87</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/fcb65f1ab87c93ab0f4f1f1c788a5ffd31baa63f"><code>fcb65f1ab87</code></a></td>
 <td>Break ties between equal deletion times by kind in trie memtables</td>
 <td>DataStax-only fix</td>
 <td>+248</td>
@@ -629,15 +677,15 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>004</td>
-<td><code>f723d246377</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/f723d2463771b3f424c876eb4bcbe55f077485c1"><code>f723d246377</code></a></td>
 <td>Don't under-skip memtable keys of a partition without a static key</td>
 <td>Equivalent of <a href="https://issues.apache.org/jira/browse/CASSANDRA-20258">CASSANDRA-20258</a> for this SAI<br>Tests from <a href="https://issues.apache.org/jira/browse/CASSANDRA-20258">CASSANDRA-20258</a> (<a href="https://github.com/apache/cassandra/commit/a118a704cbe31bc72699595f112dda7870c85287">a118a704cbe</a>)</td>
 <td>+486</td>
-<td><code>CompositePartitionKeyIndexStaticTest</code>, <code>SortedSetKeyRangeIteratorTest</code></td>
+<td><code>SortedSetKeyRangeIteratorTest</code>, <code>CompositePartitionKeyIndexStaticTest</code></td>
 </tr>
 <tr>
 <td>005</td>
-<td><code>8faae9aa793</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/8faae9aa793178fd68f6ca4ca523efcffab9427f"><code>8faae9aa793</code></a></td>
 <td>Close SAI iterators that a timed-out query opened but didn't hand over</td>
 <td>Equivalent of <a href="https://issues.apache.org/jira/browse/CASSANDRA-19177">CASSANDRA-19177</a> for this SAI</td>
 <td>+227</td>
@@ -645,7 +693,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>006</td>
-<td><code>190070cc374</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/190070cc37453b06bcfd595256cc7f046f98eeec"><code>190070cc374</code></a></td>
 <td>Skip SAI keys to the first selected row of a single partition query</td>
 <td>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-20191">CASSANDRA-20191</a> (<a href="https://github.com/apache/cassandra/commit/7a8335c2739c207b77e90c05897285b3cbaba166">7a8335c2739</a>)</td>
 <td>+180</td>
@@ -653,7 +701,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>007</td>
-<td><code>91dd80addba</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/91dd80addba454a1d636d6a3bc5a7f2cf36a36bd"><code>91dd80addba</code></a></td>
 <td>Count the SSTable indexes of the busiest expression for sai_sstable_indexes_per_query</td>
 <td>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-20243">CASSANDRA-20243</a> (<a href="https://github.com/apache/cassandra/commit/bd99331bf2a963f77ca7cba1d39efb985b21842f">bd99331bf2a</a>)</td>
 <td>+202</td>
@@ -661,7 +709,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>008</td>
-<td><code>e1406d1499a</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/e1406d1499a24cd2e9e8ea3399563765746e3be7"><code>e1406d1499a</code></a></td>
 <td>Add equals and hashCode to RangeTermTree.Term</td>
 <td>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-20866">CASSANDRA-20866</a> (<a href="https://github.com/apache/cassandra/commit/c12cc0b026310f54dad756e18db09b5db8196845">c12cc0b0263</a>)</td>
 <td>+196</td>
@@ -669,23 +717,23 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>009</td>
-<td><code>3e1c35ba143</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/3e1c35ba1432c4e64a677af993bb90d15a02d837"><code>3e1c35ba143</code></a></td>
 <td>Don't split flushes of a table with an SAI vector index into shards or data directories</td>
 <td>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-19661">CASSANDRA-19661</a> (<a href="https://github.com/apache/cassandra/commit/5172a0df3b3486fe85941836bd8fb3719330780c">5172a0df3b3</a>)</td>
 <td>+188</td>
-<td><code>SlowSAIQueryLoggerTest</code>, <code>VectorDistributedTest</code>, <code>VectorFlushShardingTest</code></td>
+<td><code>VectorFlushShardingTest</code>, <code>VectorDistributedTest</code>, <code>SlowSAIQueryLoggerTest</code></td>
 </tr>
 <tr>
 <td>010</td>
-<td><code>139023540a7</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/139023540a7146ad4923d6f1bd9fc39d8c97e50d"><code>139023540a7</code></a></td>
 <td>Test SAI fixes that this SAI already has with the Apache Cassandra regression tests</td>
 <td>Regression tests adopted from <a href="https://issues.apache.org/jira/browse/CASSANDRA-19040">CASSANDRA-19040</a>, <a href="https://issues.apache.org/jira/browse/CASSANDRA-19404">CASSANDRA-19404</a>, <a href="https://issues.apache.org/jira/browse/CASSANDRA-20086">CASSANDRA-20086</a> and others, for fixes DataStax SAI already had</td>
 <td>+507</td>
-<td><code>SimpleQueryTest</code>, <code>AllowFilteringTest</code>, <code>CollectionIndexingTest</code> and 5 more</td>
+<td><code>VectorSiftSmallHybridTest</code>, <code>CompositePartitionKeyIndexStaticTest</code>, <code>AllowFilteringTest</code> and 5 more</td>
 </tr>
 <tr>
 <td>011</td>
-<td><code>5d22616e371</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/5d22616e371db107087034833c341473452591ab"><code>5d22616e371</code></a></td>
 <td>Index DESC inet, varint and decimal clustering columns in ascending order</td>
 <td>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-20100">CASSANDRA-20100</a> (<a href="https://github.com/apache/cassandra/commit/2651623af6bb3da5f820d9e09abfbdd0683a1322">2651623af6b</a>)</td>
 <td>+602</td>
@@ -693,31 +741,31 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>012</td>
-<td><code>b6c0e11a1ab</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/b6c0e11a1abd20f5da5317e8f0f333a6ccc171a8"><code>b6c0e11a1ab</code></a></td>
 <td>Enforce the SAI term size guardrails, as Apache Cassandra does</td>
 <td>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-19493">CASSANDRA-19493</a> (<a href="https://github.com/apache/cassandra/commit/9bfaee91c4fd7a269e3ff924e8a504bad5d6514a">9bfaee91c4f</a>)<br>Tests from <a href="https://issues.apache.org/jira/browse/CASSANDRA-18926">CASSANDRA-18926</a> (<a href="https://github.com/apache/cassandra/commit/91a242fe00c9cc740d6d80df61240eebf05f4458">91a242fe00c</a>)</td>
 <td>+1111</td>
-<td><code>GuardrailSaiFrozenTermSizeTest</code>, <code>GuardrailSaiStringTermSizeTest</code>, <code>GuardrailSaiTermSizeLegacyPropertiesTest</code> and 5 more</td>
+<td><code>GuardrailSaiTermSizeLegacyPropertiesTest</code>, <code>VectorMaxTermSizeTest</code>, <code>TermSizeGuardrailWithoutAuthTest</code> and 5 more</td>
 </tr>
 <tr>
 <td>013</td>
-<td><code>a11b47ad8ac</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/a11b47ad8accb96fd0795ad2a1937cd03fd6b222"><code>a11b47ad8ac</code></a></td>
 <td>Allow ordered SAI queries to restrict clustering columns without an index</td>
 <td>Tests from <a href="https://issues.apache.org/jira/browse/CASSANDRA-19544">CASSANDRA-19544</a> (<a href="https://github.com/apache/cassandra/commit/cada1a13c8b77fc672d67d754912cf28a7120e3c">cada1a13c8b</a>)</td>
 <td>+223</td>
-<td><code>GenericOrderByInvalidQueryTest</code>, <code>OrderByWithClusteringRestrictionsTest</code>, <code>VectorInvalidQueryTest</code></td>
+<td><code>OrderByWithClusteringRestrictionsTest</code>, <code>VectorInvalidQueryTest</code>, <code>GenericOrderByInvalidQueryTest</code></td>
 </tr>
 <tr>
 <td>014</td>
-<td><code>59001b61e92</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/59001b61e92050ec884b5ecadf05ea2e13f0f330"><code>59001b61e92</code></a></td>
 <td>Reject DataStax-only row filter features in queries that can reach Apache Cassandra nodes</td>
 <td>DataStax-only fix</td>
 <td>+1941</td>
-<td><code>DataStaxOnlyFiltersAcrossDatacentersTest</code>, <code>DataStaxOnlyRowFilterDistributedTest</code>, <code>OperatorTest</code> and 3 more</td>
+<td><code>RowFilterPeerGateTest</code>, <code>DataStaxOnlyRowFilterDistributedTest</code>, <code>RowFilterPeerCompatibilityTest</code> and 3 more</td>
 </tr>
 <tr>
 <td>015</td>
-<td><code>712213c8618</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/712213c8618f82c931c5e42919a4a2670dbc5dc7"><code>712213c8618</code></a></td>
 <td>Document the SAI and vector differences from Apache Cassandra 5.0</td>
 <td>Documents the deviations from <a href="https://issues.apache.org/jira/browse/CASSANDRA-18782">CASSANDRA-18782</a>, <a href="https://issues.apache.org/jira/browse/CASSANDRA-18730">CASSANDRA-18730</a>, <a href="https://issues.apache.org/jira/browse/CASSANDRA-21515">CASSANDRA-21515</a> and float-only vectors</td>
 <td>+29</td>
@@ -725,23 +773,23 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>016</td>
-<td><code>60cfffb636a</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/60cfffb636a878a76e7f12087275f40b49166d66"><code>60cfffb636a</code></a></td>
 <td>Rebuild SAI indexes for SSTables whose components turn out to be corrupt on load</td>
 <td>DataStax-only fix</td>
 <td>+503</td>
-<td><code>IndexCorruptionOnRestartTest</code>, <code>IndexLoadFailureTest</code></td>
+<td><code>IndexLoadFailureTest</code>, <code>IndexCorruptionOnRestartTest</code></td>
 </tr>
 <tr>
 <td>017</td>
-<td><code>039862defa6</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/039862defa6e2226219702825cb6fdd250237adf"><code>039862defa6</code></a></td>
 <td>Mark an already built SAI index queryable in its initialization task on startup</td>
 <td>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-20732">CASSANDRA-20732</a> (<a href="https://github.com/apache/cassandra/commit/f553acea3e867320dcf97a19510bef1502b3e5a5">f553acea3e8</a>)</td>
 <td>+389</td>
-<td><code>IndexRestartWithManyIndexesTest</code>, <code>EmptyStringLifecycleTest</code>, <code>NativeIndexDDLTest</code> and 2 more</td>
+<td><code>IndexRestartWithManyIndexesTest</code>, <code>NativeIndexDDLTest</code>, <code>EmptyStringLifecycleTest</code> and 2 more</td>
 </tr>
 <tr>
 <td>018</td>
-<td><code>67f7c0f321a</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/67f7c0f321ae6f1eb9186af3f0a3b020397939dd"><code>67f7c0f321a</code></a></td>
 <td>Don't make compaction read fully expired SSTables for SAI and NoopIndex</td>
 <td>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-20829">CASSANDRA-20829</a> (<a href="https://github.com/apache/cassandra/commit/eb9586dc68444d204a5347ef6814b2f041a81559">eb9586dc684</a>)</td>
 <td>+122</td>
@@ -749,15 +797,15 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>019</td>
-<td><code>e020bdb9709</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/e020bdb9709227b536a4e466a53c2d38d0ad2b10"><code>e020bdb9709</code></a></td>
 <td>Notify indexes about rows in fully expired SSTables dropped by UCS expiration tasks</td>
 <td>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-20829">CASSANDRA-20829</a> (<a href="https://github.com/apache/cassandra/commit/eb9586dc68444d204a5347ef6814b2f041a81559">eb9586dc684</a>)<br>Tests from <a href="https://issues.apache.org/jira/browse/CASSANDRA-21577">CASSANDRA-21577</a> (<a href="https://github.com/apache/cassandra/commit/e87f4559a9ba30478843a1214596a663618c88db">e87f4559a9b</a>)</td>
 <td>+449</td>
-<td><code>ExpirationTaskTest</code>, <code>CustomIndexTest</code>, <code>FullyExpiredSSTablesCompactionTest</code></td>
+<td><code>CustomIndexTest</code>, <code>ExpirationTaskTest</code>, <code>FullyExpiredSSTablesCompactionTest</code></td>
 </tr>
 <tr>
 <td>020</td>
-<td><code>5ac6f62ee4f</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/5ac6f62ee4f2545c90f0562e273467da07991288"><code>5ac6f62ee4f</code></a></td>
 <td>Close the FileHandle when IndexFileUtils.openBlockingInput fails to create a reader</td>
 <td>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-19987">CASSANDRA-19987</a> (<a href="https://github.com/apache/cassandra/commit/6f5fe8c06d5831daae1f1a4f2412f3185798dca0">6f5fe8c06d5</a>)</td>
 <td>+91</td>
@@ -765,7 +813,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>021</td>
-<td><code>904759d3a01</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/904759d3a01b1fd659897741a10d757b1fc08113"><code>904759d3a01</code></a></td>
 <td>Don't open and cache the SSTables to import when checking their SAI components</td>
 <td>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-18714">CASSANDRA-18714</a> (importer part)</td>
 <td>+88</td>
@@ -773,7 +821,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>022</td>
-<td><code>c0a1d0cba68</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/c0a1d0cba685b919b4d71691567c3e4ff2b10743"><code>c0a1d0cba68</code></a></td>
 <td>Parse SAI index options with Locale.US</td>
 <td>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-19953">CASSANDRA-19953</a> (<a href="https://github.com/apache/cassandra/commit/46b36f23cd865ee905742ff1d3da05fc8a467758">46b36f23cd8</a>)</td>
 <td>+166</td>
@@ -781,7 +829,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>023</td>
-<td><code>ac17666cdb8</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/ac17666cdb8db97c1454de7a47132c555793eb0b"><code>ac17666cdb8</code></a></td>
 <td>Log SAI index writer aborts at DEBUG when there is no cause</td>
 <td>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-20695">CASSANDRA-20695</a> (<a href="https://github.com/apache/cassandra/commit/f9d759dc3860bf4c6f8de9a58398409165f26a62">f9d759dc386</a>)</td>
 <td>+157</td>
@@ -789,7 +837,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>024</td>
-<td><code>b249e01ec29</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/b249e01ec2928948c34cc7997db766260304ae51"><code>b249e01ec29</code></a></td>
 <td>Document that prioritize_over_legacy_index defaults to true</td>
 <td>Documents <a href="https://issues.apache.org/jira/browse/CASSANDRA-20334">CASSANDRA-20334</a></td>
 <td>+56</td>
@@ -797,7 +845,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>025</td>
-<td><code>572931a4f9b</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/572931a4f9b32e21f8217beeec8c6b3ff8ab4ab9"><code>572931a4f9b</code></a></td>
 <td>Fix TriePartitionUpdaterLegacyIndex assertions on overlapping deletions</td>
 <td>Cherry-pick of DataStax CNDB-19682 (<a href="https://github.com/datastax/cassandra/commit/b27799ea922464f567e4c39f2e2f68b85b0f8411">b27799ea922</a>)</td>
 <td>+398</td>
@@ -805,39 +853,39 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>025b</td>
-<td><code>a6b52517ff5</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/a6b52517ff56d4ff48c90c162528538d502a3354"><code>a6b52517ff5</code></a></td>
 <td>Test more deletions overlapping existing ones in an indexed trie memtable</td>
 <td>Tests for the CNDB-19682 cherry-pick (025)</td>
 <td>+146</td>
-<td><code>EqualTimestampTombstoneTest</code>, <code>TriePartitionUpdaterLegacyIndexTest</code></td>
+<td><code>TriePartitionUpdaterLegacyIndexTest</code>, <code>EqualTimestampTombstoneTest</code></td>
 </tr>
 <tr>
 <td>026</td>
-<td><code>ce4eebbd4f1</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/ce4eebbd4f15a594cf9af35ddcaec14b27497c25"><code>ce4eebbd4f1</code></a></td>
 <td>Don't deliver index events for a write a trie memtable failed to apply</td>
 <td>DataStax-only fix</td>
 <td>+1194</td>
-<td><code>TrieMemtableColumnsVisibilityTest</code>, <code>TrieMemtableFailedWriteIndexTest</code>, <code>IndexerFailuresTest</code></td>
+<td><code>TrieMemtableFailedWriteIndexTest</code>, <code>IndexerFailuresTest</code>, <code>TrieMemtableColumnsVisibilityTest</code></td>
 </tr>
 <tr>
 <td>027</td>
-<td><code>331dd77ba02</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/331dd77ba029ff8154ca46fdf102e48dee2fb685"><code>331dd77ba02</code></a></td>
 <td>Support LIKE restrictions in filtering queries</td>
 <td>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-17198">CASSANDRA-17198</a> (<a href="https://github.com/apache/cassandra/commit/cf806cac1aca7b56fe715bbd2641cda65beef91e">cf806cac1ac</a>)</td>
 <td>+2104</td>
-<td><code>DataStax21MessagingVersionTest</code>, <code>LikeAcrossDatacentersTest</code>, <code>LikeFilteringDistributedTest</code> and 12 more</td>
+<td><code>AllowFilteringTest</code>, <code>LikeFilteringDistributedTest</code>, <code>DataStax21MessagingVersionTest</code> and 12 more</td>
 </tr>
 <tr>
 <td>028</td>
-<td><code>744cd7cf376</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/744cd7cf3767d0fce48c014b317984b7688456b1"><code>744cd7cf376</code></a></td>
 <td>Support blob columns in SAI indexes</td>
 <td>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-20012">CASSANDRA-20012</a> (<a href="https://github.com/apache/cassandra/commit/650fd418500c06d3df91af2c1c3ec98a9ed17468">650fd418500</a>)</td>
 <td>+1388</td>
-<td><code>BlobIndexDistributedTest</code>, <code>LikeAcrossDatacentersTest</code>, <code>GuardrailSaiBlobTermSizeTest</code> and 14 more</td>
+<td><code>BlobIndexTest</code>, <code>BlobIndexDistributedTest</code>, <code>GuardrailSaiBlobTermSizeTest</code> and 14 more</td>
 </tr>
 <tr>
 <td>029</td>
-<td><code>cd3ce5321b2</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/cd3ce5321b2d0a2f19d42e87996df16e1d28852d"><code>cd3ce5321b2</code></a></td>
 <td>Reject SAI query values that can't be sent to the replicas</td>
 <td>DataStax-only fix</td>
 <td>+360</td>
@@ -845,7 +893,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>030</td>
-<td><code>13731e74fd5</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/13731e74fd50dd900a1fbab92300fe4749c5ec18"><code>13731e74fd5</code></a></td>
 <td>Reject SAI indexes on non-float vectors at CREATE INDEX, as Apache Cassandra does</td>
 <td>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-18715">CASSANDRA-18715</a> (<a href="https://github.com/apache/cassandra/commit/949b760f5516c139591473038917247b1fd7f500">949b760f551</a>)</td>
 <td>+156</td>
@@ -853,15 +901,15 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>031</td>
-<td><code>d4a5fc7aa74</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/d4a5fc7aa74b3605c8a6917dea2d14db2b037512"><code>d4a5fc7aa74</code></a></td>
 <td>Fix trie memtable live data size going negative after deletions</td>
 <td>Port of CNDB-19681 (<a href="https://github.com/datastax/cassandra/commit/2e3bd1468b4123a165fea878fcafc2cd78a3f696">2e3bd1468b4</a>)<br>Port of CNDB-19681 (<a href="https://github.com/datastax/cassandra/commit/e314d3cec693ddc7056d81ac92d1a64e70cf855a">e314d3cec69</a>)</td>
 <td>+543</td>
-<td><code>SSTableSkippableCellsTest</code>, <code>TrieMemtableLiveDataSizeTest</code></td>
+<td><code>TrieMemtableLiveDataSizeTest</code>, <code>SSTableSkippableCellsTest</code></td>
 </tr>
 <tr>
 <td>032</td>
-<td><code>ecd92655eec</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/ecd92655eec6b921b5a29ff8fee3824fa806c1f7"><code>ecd92655eec</code></a></td>
 <td>Confirm an empty trie partition against the trie before flush skips it</td>
 <td>DataStax-only fix</td>
 <td>+269</td>
@@ -869,39 +917,39 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>033</td>
-<td><code>995d2963296</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/995d2963296bcb2c098a5632090d4282ef0080bf"><code>995d2963296</code></a></td>
 <td>Don't let a new SAI index adopt stale components of a same-name index</td>
 <td>DataStax-only fix</td>
 <td>+2280</td>
-<td><code>ImportTest</code>, <code>IndexDefinitionDigestTest</code>, <code>IndexDescriptorTest</code> and 8 more</td>
+<td><code>StaleSameNameIndexComponentsTest</code>, <code>IndexDefinitionDigestTest</code>, <code>ImportTest</code> and 8 more</td>
 </tr>
 <tr>
 <td>034</td>
-<td><code>5e60c1c499a</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/5e60c1c499afecd8de0fbd3eddb16f72e7b7891f"><code>5e60c1c499a</code></a></td>
 <td>Read the SAI indexes written by Apache Cassandra 5.0</td>
 <td>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-18067">CASSANDRA-18067</a> (<a href="https://github.com/apache/cassandra/commit/6f125c80420f6d249b5414d886e1b4a93cc34e7f">6f125c80420</a>)<br>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-18669">CASSANDRA-18669</a> (<a href="https://github.com/apache/cassandra/commit/2531cb045897d5b771f79039d194a1f679d8629a">2531cb04589</a>)<br>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-21516">CASSANDRA-21516</a> (<a href="https://github.com/apache/cassandra/commit/4bd98de6eeaebdaa4dbbadf4570c2ded4cb01067">4bd98de6eea</a>)</td>
 <td>+8941</td>
-<td><code>ApacheSAIEntireSSTableStreamingTest</code>, <code>MixedVersionWideRowsTest</code>, <code>NativeIndexDDLTest</code> and 10 more</td>
+<td><code>ApacheIndexUpgradeTest</code>, <code>ApacheIndexLifecycleTest</code>, <code>ApacheLiteralIndexTest</code> and 10 more</td>
 </tr>
 <tr>
 <td>035</td>
-<td><code>c8e58e04874</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/c8e58e0487474b5616fde9136b4875e3e8243f5b"><code>c8e58e04874</code></a></td>
 <td>Build only missing SAI indexes before adding SSTables, and fail only the stream or import</td>
 <td>Tests from <a href="https://issues.apache.org/jira/browse/CASSANDRA-18670">CASSANDRA-18670</a> (<a href="https://github.com/apache/cassandra/commit/83203a14c400ff99cfb2a5b7e655a663ea882c2b">83203a14c40</a>)</td>
 <td>+1135</td>
-<td><code>ImportIndexedSSTablesTest</code>, <code>IndexCreatedDuringStreamingTest</code>, <code>ImportTest</code> and 3 more</td>
+<td><code>MissingIndexOnAddedSSTablesTest</code>, <code>ApacheComponentsReplacedBeforeAddingTest</code>, <code>ImportTest</code> and 3 more</td>
 </tr>
 <tr>
 <td>036</td>
-<td><code>7ca866b71d4</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/7ca866b71d49c0ebf4c2f37a28c1e06721cfe657"><code>7ca866b71d4</code></a></td>
 <td>Don't let a dropped index's build change the build state of its same-name replacement</td>
 <td>DataStax-only fix</td>
 <td>+490</td>
-<td><code>SecondaryIndexManagerTest</code>, <code>MissingIndexOnAddedSSTablesTest</code></td>
+<td><code>MissingIndexOnAddedSSTablesTest</code>, <code>SecondaryIndexManagerTest</code></td>
 </tr>
 <tr>
 <td>037</td>
-<td><code>95a19f32a62</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/95a19f32a62fae18e10f648be6d8969046ecc26a"><code>95a19f32a62</code></a></td>
 <td>Rewrite corrupt per-SSTable SAI components on a partial index build</td>
 <td>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-18490">CASSANDRA-18490</a> (<a href="https://github.com/apache/cassandra/commit/b396faf913c5843dbac90cd275554cc1d4e05c21">b396faf913c</a>)</td>
 <td>+249</td>
@@ -909,15 +957,15 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>038</td>
-<td><code>fd61c6873d4</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/fd61c6873d4282f752235cd7aa9e55cd68034379"><code>fd61c6873d4</code></a></td>
 <td>Index empty values and reject EQ-only operators on DESC clustering columns as on ASC ones</td>
 <td>DataStax-only fix</td>
 <td>+363</td>
-<td><code>BlobIndexTest</code>, <code>ReversedClusteringIndexTest</code></td>
+<td><code>ReversedClusteringIndexTest</code>, <code>BlobIndexTest</code></td>
 </tr>
 <tr>
 <td>039</td>
-<td><code>ede0074ea84</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/ede0074ea84ce12a3a245eb6136d6a169b866a28"><code>ede0074ea84</code></a></td>
 <td>Include the empty term in the memtable index's ranges without a lower bound</td>
 <td>DataStax-only fix</td>
 <td>+174</td>
@@ -925,7 +973,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>040</td>
-<td><code>3db4c8633e2</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/3db4c8633e247f049d852fee787eebbbd82ee259"><code>3db4c8633e2</code></a></td>
 <td>Index the cells that are already expired when the SAI memtable index is given them</td>
 <td>DataStax-only fix</td>
 <td>+146</td>
@@ -933,7 +981,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>041</td>
-<td><code>e70ba28bab2</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/e70ba28bab260095b825691c2efed88be9b05392"><code>e70ba28bab2</code></a></td>
 <td>Don't subtract unverified index matches from NOT CONTAINS and NOT CONTAINS KEY candidates</td>
 <td>DataStax-only fix</td>
 <td>+299</td>
@@ -941,31 +989,31 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>042</td>
-<td><code>d7b5dd2f369</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/d7b5dd2f36977c867fbb9a8614af9cb36ec70082"><code>d7b5dd2f369</code></a></td>
 <td>Evaluate analyzed CONTAINS and NOT CONTAINS of several words per element</td>
 <td>DataStax-only fix</td>
 <td>+527</td>
-<td><code>IndexHintsTest</code>, <code>AnalyzedContainsTest</code>, <code>AnalyzedNotContainsTest</code> and 1 more</td>
+<td><code>AnalyzedContainsTest</code>, <code>AnalyzedNotContainsTest</code>, <code>MultipleColumnIndexTest</code> and 1 more</td>
 </tr>
 <tr>
 <td>043</td>
-<td><code>e630511ed8c</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/e630511ed8c2e173188283f2f734e9f4a50aaabc"><code>e630511ed8c</code></a></td>
 <td>Index the empty value written by an update of a row in the memtable</td>
 <td>Related to <a href="https://issues.apache.org/jira/browse/CASSANDRA-20313">CASSANDRA-20313</a></td>
 <td>+498</td>
-<td><code>BM25UpdateTest</code>, <code>EmptyValueUpdateTest</code></td>
+<td><code>EmptyValueUpdateTest</code>, <code>BM25UpdateTest</code></td>
 </tr>
 <tr>
 <td>044</td>
-<td><code>f6d46514c01</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/f6d46514c0108e81de49e3da63c83672cd33bf8d"><code>f6d46514c01</code></a></td>
 <td>Fix SAI estimates of infinite, NaN and DESC numbers, and don't fail queries on estimates</td>
 <td>DataStax-only fix</td>
 <td>+882</td>
-<td><code>LargeNumberBoundsTest</code>, <code>NumericRangeEstimatesTest</code>, <code>TermsDistributionTest</code> and 1 more</td>
+<td><code>NumericRangeEstimatesTest</code>, <code>LargeNumberBoundsTest</code>, <code>EstimateFailureTest</code> and 1 more</td>
 </tr>
 <tr>
 <td>045</td>
-<td><code>fbc982440ee</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/fbc982440ee46705ca0c08c480b7d6ef12de408e"><code>fbc982440ee</code></a></td>
 <td>Match no rows with a contradictory range from the SAI memtable index</td>
 <td>DataStax-only fix</td>
 <td>+182</td>
@@ -973,23 +1021,23 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>046</td>
-<td><code>325279bbb41</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/325279bbb41a3b8ea02a0fe287f64d7b9404a01e"><code>325279bbb41</code></a></td>
 <td>Don't lose a term that a row still holds from the SAI memtable index on an update</td>
 <td>DataStax-only fix</td>
 <td>+308</td>
-<td><code>BM25UpdateTest</code>, <code>ExpiredOnArrivalTest</code>, <code>SharedTermUpdateTest</code></td>
+<td><code>SharedTermUpdateTest</code>, <code>BM25UpdateTest</code>, <code>ExpiredOnArrivalTest</code></td>
 </tr>
 <tr>
 <td>047</td>
-<td><code>5c4ac0ce4c9</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/5c4ac0ce4c9d08879c2be9d3379d9b8570c94967"><code>5c4ac0ce4c9</code></a></td>
 <td>Don't fail NOT CONTAINS KEY on an analyzed map keys index for a row without the map</td>
 <td>DataStax-only fix</td>
 <td>+40</td>
-<td><code>AnalyzedContainsTest</code>, <code>AnalyzedNotContainsTest</code></td>
+<td><code>AnalyzedNotContainsTest</code>, <code>AnalyzedContainsTest</code></td>
 </tr>
 <tr>
 <td>048</td>
-<td><code>11abb672196</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/11abb67219640e5a649b087e4ed019efa04f672d"><code>11abb672196</code></a></td>
 <td>Match no element for CONTAINS of a value an analyzer makes no term of</td>
 <td>DataStax-only fix</td>
 <td>+12</td>
@@ -997,15 +1045,15 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>049</td>
-<td><code>214dc9b9b8d</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/214dc9b9b8dea19505a0e13b45f9631abc0cdb5b"><code>214dc9b9b8d</code></a></td>
 <td>Fix SAI queries with an empty bound on a non-literal index</td>
-<td>Port of part of <a href="https://issues.apache.org/jira/browse/CASSANDRA-20313">CASSANDRA-20313</a></td>
+<td>Same problem as <a href="https://issues.apache.org/jira/browse/CASSANDRA-20313">CASSANDRA-20313</a>, fixed differently</td>
 <td>+397</td>
 <td><code>EmptyBoundsTest</code>, <code>EmptyBoundSearchTest</code></td>
 </tr>
 <tr>
 <td>050</td>
-<td><code>8defe3bc673</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/8defe3bc67337977aa7b0428d6df74124f19f68f"><code>8defe3bc673</code></a></td>
 <td>Find the rows without the map entry for m[k] != v on an SAI map entries index</td>
 <td>DataStax-only fix</td>
 <td>+103</td>
@@ -1013,31 +1061,31 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>051</td>
-<td><code>4a72521b752</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/4a72521b752dfd884b3b8330e488a881e739cd7d"><code>4a72521b752</code></a></td>
 <td>Test negations on deleted and expired collection elements</td>
 <td>DataStax-only fix</td>
 <td>+16</td>
-<td><code>FilteringDeletedCollectionCellsTest</code>, <code>StaticColumnsTest</code></td>
+<td><code>StaticColumnsTest</code>, <code>FilteringDeletedCollectionCellsTest</code></td>
 </tr>
 <tr>
 <td>052</td>
-<td><code>27de9b32cb3</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/27de9b32cb33b0bf79db30c2405cba7cd3fb583d"><code>27de9b32cb3</code></a></td>
 <td>Ignore null elements of a filtered IN, as Apache Cassandra 5.0 does</td>
 <td>DataStax-only fix</td>
 <td>+227</td>
-<td><code>SelectSingleColumnRelationTest</code>, <code>ComplexQueryTest</code>, <code>InNullElementsTest</code></td>
+<td><code>InNullElementsTest</code>, <code>ComplexQueryTest</code>, <code>SelectSingleColumnRelationTest</code></td>
 </tr>
 <tr>
 <td>053</td>
-<td><code>925eff0c75d</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/925eff0c75dfabdbbbdd39f1c0f61b5d2f42f4f7"><code>925eff0c75d</code></a></td>
 <td>Index static rows on partition key components, and number SAI rows alike in every build</td>
-<td>Static-row part matches <a href="https://issues.apache.org/jira/browse/CASSANDRA-20338">CASSANDRA-20338</a>; the row numbering fix is DataStax-only</td>
+<td>DataStax-only fix</td>
 <td>+4124</td>
-<td><code>GuardrailSaiStringTermSizeTest</code>, <code>ConcurrentCorruptPerSSTableComponentsBuildTest</code>, <code>PerSSTableComponentsLatchTest</code> and 7 more</td>
+<td><code>StoppedIndexBuildTest</code>, <code>StaticRowIndexBuildTest</code>, <code>PerSSTableComponentsRebuildTest</code> and 7 more</td>
 </tr>
 <tr>
 <td>054</td>
-<td><code>3c5bbbcc208</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/3c5bbbcc20833c99748fa47ad38b94b86bc0954f"><code>3c5bbbcc208</code></a></td>
 <td>Don't walk the keys of a wide partition after the SAI key of its static row</td>
 <td>DataStax-only fix</td>
 <td>+99</td>
@@ -1045,39 +1093,39 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>055</td>
-<td><code>a8c4b2529ec</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/a8c4b2529ec9085b9d5e0f0e9a2df419af31f491"><code>a8c4b2529ec</code></a></td>
 <td>Evaluate an OR of static and regular columns per row in RowFilter</td>
 <td>DataStax-only fix</td>
 <td>+894</td>
-<td><code>RowFilterTest</code>, <code>StaticDisjunctionDeadCellsTest</code>, <code>StaticColumnDisjunctionTest</code></td>
+<td><code>StaticColumnDisjunctionTest</code>, <code>RowFilterTest</code>, <code>StaticDisjunctionDeadCellsTest</code></td>
 </tr>
 <tr>
 <td>056</td>
-<td><code>3d5f5d1e18e</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/3d5f5d1e18ee8a78ed5f099e4b1435d8d6cdac8b"><code>3d5f5d1e18e</code></a></td>
 <td>Return every row of the partition for ANN ordering on a static vector column</td>
 <td>Tests from <a href="https://issues.apache.org/jira/browse/CASSANDRA-20086">CASSANDRA-20086</a> (<a href="https://github.com/apache/cassandra/commit/23ec1c8a3ff6f34882981df4a6fd07e0e27feafc">23ec1c8a3ff</a>)</td>
 <td>+1373</td>
-<td><code>OrderByPerPartitionLimitDistributedTest</code>, <code>OrderByPerPartitionLimitTest</code>, <code>StaticColumnOrderByTest</code> and 3 more</td>
+<td><code>OrderByPerPartitionLimitTest</code>, <code>StaticColumnOrderByTest</code>, <code>OrderByPerPartitionLimitDistributedTest</code> and 3 more</td>
 </tr>
 <tr>
 <td>057</td>
-<td><code>40881baecc3</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/40881baecc37962c406b0a403f420ab52a3220cb"><code>40881baecc3</code></a></td>
 <td>Order every row of a partition whose SAI predicate key has no clustering</td>
 <td>DataStax-only fix</td>
 <td>+825</td>
-<td><code>OrderByWithPartitionLevelKeysTest</code>, <code>PrimaryKeyVectorWithStaticRowsTest</code>, <code>StaticPredicateOrderByTest</code> and 1 more</td>
+<td><code>OrderByWithPartitionLevelKeysTest</code>, <code>StaticPredicateOrderByTest</code>, <code>PrimaryKeyListUtilTest</code> and 1 more</td>
 </tr>
 <tr>
 <td>058</td>
-<td><code>d2e480e4ca2</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/d2e480e4ca2a2fd115fa202d47416b0feaff7787"><code>d2e480e4ca2</code></a></td>
 <td>Reject SAI ordering on tables with clustering columns when an index isn't row-aware</td>
 <td>DataStax-only fix</td>
 <td>+281</td>
-<td><code>FeaturesVersionSupportFBTest</code>, <code>FeaturesVersionSupportTest</code>, <code>LargePartitionsTest</code></td>
+<td><code>FeaturesVersionSupportTest</code>, <code>FeaturesVersionSupportFBTest</code>, <code>LargePartitionsTest</code></td>
 </tr>
 <tr>
 <td>059</td>
-<td><code>50deef58ddf</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/50deef58ddfd61a4eb38ed6b277248e4abe13717"><code>50deef58ddf</code></a></td>
 <td>Skip range tombstone markers when reading the ordered value of a row for SAI ORDER BY</td>
 <td>DataStax-only fix</td>
 <td>+34</td>
@@ -1085,15 +1133,15 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>060</td>
-<td><code>5748d3e7455</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/5748d3e7455c63beb01c19b17db36cc7cff62d32"><code>5748d3e7455</code></a></td>
 <td>Keep each row id under the vector of its row when flushing a vector memtable index</td>
 <td>DataStax-only fix</td>
 <td>+388</td>
-<td><code>VectorConcurrentFirstWritesTest</code>, <code>VectorUpdateDeleteTest</code>, <code>VectorMemtableIndexTest</code></td>
+<td><code>VectorConcurrentFirstWritesTest</code>, <code>VectorMemtableIndexTest</code>, <code>VectorUpdateDeleteTest</code></td>
 </tr>
 <tr>
 <td>061</td>
-<td><code>c5a989ceee0</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/c5a989ceee0b868fc817235b20c479bae9ab1779"><code>c5a989ceee0</code></a></td>
 <td>Add the key of a row that gets its vector by an update to the vector memtable index</td>
 <td>DataStax-only fix</td>
 <td>+33</td>
@@ -1101,7 +1149,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>062</td>
-<td><code>d98b674b593</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/d98b674b5936a2e5e872f99d635ae22f157457fd"><code>d98b674b593</code></a></td>
 <td>Time-stamp the SAI score cell with the ordered data, so a row deletion doesn't shadow it</td>
 <td>DataStax-only fix</td>
 <td>+45</td>
@@ -1109,23 +1157,23 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>063</td>
-<td><code>f6ac88c6c17</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/f6ac88c6c17f689069a4369eb8e59cddffdf8d5a"><code>f6ac88c6c17</code></a></td>
 <td>Remove from SAI memtable indexes the row data a write removes with nothing in its place</td>
 <td>DataStax-only fix</td>
 <td>+459</td>
-<td><code>FeaturesVersionSupportTest</code>, <code>LuceneUpdateDeleteTest</code>, <code>RowWrittenAgainAfterDeletionTest</code> and 1 more</td>
+<td><code>RowWrittenAgainAfterDeletionTest</code>, <code>VectorUpdateDeleteTest</code>, <code>LuceneUpdateDeleteTest</code> and 1 more</td>
 </tr>
 <tr>
 <td>064</td>
-<td><code>967387eafc2</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/967387eafc240c37f8e8ada42d495c497604394a"><code>967387eafc2</code></a></td>
 <td>Test that deletions older than a row's vector keep the row in the SAI memtable index</td>
 <td>DataStax-only fix</td>
 <td>+274</td>
-<td><code>OlderDeletionKeepsIndexedValuesOffheapObjectsTest</code>, <code>OlderDeletionKeepsIndexedValuesTest</code></td>
+<td><code>OlderDeletionKeepsIndexedValuesTest</code>, <code>OlderDeletionKeepsIndexedValuesOffheapObjectsTest</code></td>
 </tr>
 <tr>
 <td>065</td>
-<td><code>af4e52a0c11</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/af4e52a0c119fbecc91d715185c8263b2b98e89a"><code>af4e52a0c11</code></a></td>
 <td>Ignore early compaction results in SAI, and stop major compactions in initial index builds</td>
 <td>DataStax-only fix</td>
 <td>+376</td>
@@ -1133,7 +1181,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>066</td>
-<td><code>2cb2f35aefb</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/2cb2f35aefbbdd962cf8b6da5d5796b25ee4ff1b"><code>2cb2f35aefb</code></a></td>
 <td>Build the SSTables an initial index build missed before making the index queryable</td>
 <td>DataStax-only fix</td>
 <td>+109</td>
@@ -1141,7 +1189,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>067</td>
-<td><code>8af41195ad5</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/8af41195ad53eeb2a7ed618d5aa466a62afd8f7f"><code>8af41195ad5</code></a></td>
 <td>Stop paging single-partition ranges at the end of the partition</td>
 <td>DataStax-only fix</td>
 <td>+152</td>
@@ -1149,7 +1197,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>068</td>
-<td><code>3f9e28fc617</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/3f9e28fc617a99416e041126ce37217575130251"><code>3f9e28fc617</code></a></td>
 <td>Test short read protection on a range an endpoint-grouped replica didn't read</td>
 <td>DataStax-only fix</td>
 <td>+106</td>
@@ -1157,15 +1205,15 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>069</td>
-<td><code>017d9e35c59</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/017d9e35c5935b7096e6dfca6819a2ba3887a546"><code>017d9e35c59</code></a></td>
 <td>Relax SAI intersections on replicas when the coordinator enables non-strict filtering</td>
 <td>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-19018">CASSANDRA-19018</a> (<a href="https://github.com/apache/cassandra/commit/f7984627e7dd5794dabc099f49ecf80ca3631803">f7984627e7d</a>)<br>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-19968">CASSANDRA-19968</a> (<a href="https://github.com/apache/cassandra/commit/019c9118d4109ee1d394b65281c45495eb57e033">019c9118d41</a>)</td>
 <td>+5834</td>
-<td><code>FilteringShortReadProtectionTest</code>, <code>GroupByShortReadProtectionTest</code>, <code>DataStaxOnlyFiltersAcrossDatacentersTest</code> and 24 more</td>
+<td><code>NonStrictPartitionReadTest</code>, <code>NonStrictFilteringModelTest</code>, <code>NonStrictFilteringCoordinatorVersionTest</code> and 24 more</td>
 </tr>
 <tr>
 <td>070</td>
-<td><code>c527cfcaffb</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/c527cfcaffbc3a6ac730131e35a02064ba795290"><code>c527cfcaffb</code></a></td>
 <td>Union restrictions on unindexed columns when SAI index matches are repaired</td>
 <td>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-20189">CASSANDRA-20189</a> (<a href="https://github.com/apache/cassandra/commit/953ab6cf64088614ada26e05d664b6a25b1d561d">953ab6cf640</a>)</td>
 <td>+308</td>
@@ -1173,15 +1221,15 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>071</td>
-<td><code>0235c5d3984</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/0235c5d398482723b2fc97271205ce0b97a9f7c7"><code>0235c5d3984</code></a></td>
 <td>Apply SAI updates to skip-list memtables atomically, so racing writes keep index entries</td>
 <td>DataStax-only fix</td>
 <td>+1424</td>
-<td><code>FailedWriteFlushTest</code>, <code>TrieMemtableFailedWriteIndexTest</code>, <code>AtomicBTreePartitionMemtableAccountingTest</code> and 4 more</td>
+<td><code>SkipListAtomicUpdatesTest</code>, <code>IndexFailureAfterApplyTest</code>, <code>FailedWriteFlushTest</code> and 4 more</td>
 </tr>
 <tr>
 <td>072</td>
-<td><code>e8a4b150529</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/e8a4b1505292b3fe71021d98bc202040c4448335"><code>e8a4b150529</code></a></td>
 <td>Make SAI indexes non-queryable when an SSTable comes back without per-SSTable components</td>
 <td>DataStax-only fix</td>
 <td>+148</td>
@@ -1189,7 +1237,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>073</td>
-<td><code>1ae87c2c71a</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/1ae87c2c71a86dc6ef910cc257c239b91d4d1be6"><code>1ae87c2c71a</code></a></td>
 <td>Say what holds an SSTable that an SAI rebuild can't reserve</td>
 <td>DataStax-only fix</td>
 <td>+92</td>
@@ -1197,15 +1245,15 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>074</td>
-<td><code>041930d6280</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/041930d6280fc8516c6af3c814e88743bd82b040"><code>041930d6280</code></a></td>
 <td>Keep an SAI full rebuild from making its index queryable without every live SSTable</td>
 <td>DataStax-only fix</td>
 <td>+1408</td>
-<td><code>FullRebuildEndCheckDeciderTest</code>, <code>FullRebuildEndCheckPendingBuildsTest</code>, <code>StoppedIndexBuildTest</code></td>
+<td><code>FullRebuildEndCheckPendingBuildsTest</code>, <code>FullRebuildEndCheckDeciderTest</code>, <code>StoppedIndexBuildTest</code></td>
 </tr>
 <tr>
 <td>075</td>
-<td><code>ececdb3a126</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/ececdb3a1268b70690d203b2e150865f57e8f445"><code>ececdb3a126</code></a></td>
 <td>Fail the indexes of a build whose builders can't be submitted</td>
 <td>DataStax-only fix</td>
 <td>+265</td>
@@ -1213,7 +1261,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>076</td>
-<td><code>2c5484805c2</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/2c5484805c2206b373744ef83a6a6127166d2d8b"><code>2c5484805c2</code></a></td>
 <td>Reject map entries too large for an SAI entries index before the write is applied</td>
 <td>DataStax-only fix</td>
 <td>+282</td>
@@ -1221,39 +1269,39 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>077</td>
-<td><code>37497e30e07</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/37497e30e07e3d66af75bc2ae8611fbffa9d1e3a"><code>37497e30e07</code></a></td>
 <td>Read the key length of an SAI map entry range bound as unsigned, at the buffer position</td>
 <td>DataStax-only fix</td>
 <td>+173</td>
-<td><code>CompositeTypeTrieSearchPrefixTest</code>, <code>MapEntriesLargeKeyRangeTest</code></td>
+<td><code>MapEntriesLargeKeyRangeTest</code>, <code>CompositeTypeTrieSearchPrefixTest</code></td>
 </tr>
 <tr>
 <td>078</td>
-<td><code>998ea989cb5</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/998ea989cb55bc629f936943c6786fb704f00f77"><code>998ea989cb5</code></a></td>
 <td>Index map entries, frozen values and varints in canonical form in SAI</td>
 <td>DataStax-only fix</td>
 <td>+2107</td>
-<td><code>GuardrailSaiCanonicalTermSizeTest</code>, <code>CanonicalIndexTermEdgeCasesTest</code>, <code>CanonicalTermOverMaxSizeTest</code> and 7 more</td>
+<td><code>CanonicalIndexTermEdgeCasesTest</code>, <code>NestedDecimalIndexTest</code>, <code>GuardrailSaiCanonicalTermSizeTest</code> and 7 more</td>
 </tr>
 <tr>
 <td>079</td>
-<td><code>ac2d89aeea3</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/ac2d89aeea30df9228b88bf721b03ac97d139508"><code>ac2d89aeea3</code></a></td>
 <td>Scan the whole SAI index for != on frozen values before version DB</td>
 <td>DataStax-only fix</td>
 <td>+245</td>
-<td><code>FrozenNotEqualTest</code>, <code>MapEntriesDecimalLegacyTest</code>, <code>MapEntriesLargeKeyRangeTest</code> and 1 more</td>
+<td><code>FrozenNotEqualTest</code>, <code>MapEntriesNotEqualTest</code>, <code>MapEntriesDecimalLegacyTest</code> and 1 more</td>
 </tr>
 <tr>
 <td>080</td>
-<td><code>a5bb64889ef</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/a5bb64889efbbea4f3ca99705592b14dbab6b6e8"><code>a5bb64889ef</code></a></td>
 <td>Check ORDER BY and the index query guardrail against the read's index plan</td>
 <td>DataStax-only fix</td>
 <td>+242</td>
-<td><code>SelectStatementExecuteWithPagerTest</code>, <code>GuardrailNonPartitionRestrictedIndexQueryTest</code>, <code>GenericOrderByInvalidQueryTest</code></td>
+<td><code>GuardrailNonPartitionRestrictedIndexQueryTest</code>, <code>GenericOrderByInvalidQueryTest</code>, <code>SelectStatementExecuteWithPagerTest</code></td>
 </tr>
 <tr>
 <td>081</td>
-<td><code>914fcd63296</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/914fcd6329608d8a217fe7695db8fe4f6df44b1e"><code>914fcd63296</code></a></td>
 <td>Don't let the key scans of SAI negations skip back into a partition they returned rows of</td>
 <td>DataStax-only fix</td>
 <td>+131</td>
@@ -1261,7 +1309,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>082</td>
-<td><code>d2fbec59d50</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/d2fbec59d50ed38fb424cf98da9a341aaee38e86"><code>d2fbec59d50</code></a></td>
 <td>Find the partitions with only a static row for negations on an indexed static collection</td>
 <td>DataStax-only fix</td>
 <td>+377</td>
@@ -1269,7 +1317,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>083</td>
-<td><code>6d42b5aea4c</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/6d42b5aea4c1bafda4120d041bd05a35c6265864"><code>6d42b5aea4c</code></a></td>
 <td>Don't let SAI return a partition for its static row when only its rows could match</td>
 <td>DataStax-only fix</td>
 <td>+44</td>
@@ -1277,39 +1325,39 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>084</td>
-<td><code>406eb1cceaf</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/406eb1cceafeba6bf1702aed69c87ee2ea011657"><code>406eb1cceaf</code></a></td>
 <td>Don't return a partition as static content when its static row can't match on its own</td>
 <td>DataStax-only fix</td>
 <td>+268</td>
-<td><code>StaticContentWithoutMatchingRowsDistributedTest</code>, <code>StaticContentWithoutMatchingRowsTest</code></td>
+<td><code>StaticContentWithoutMatchingRowsTest</code>, <code>StaticContentWithoutMatchingRowsDistributedTest</code></td>
 </tr>
 <tr>
 <td>085</td>
-<td><code>bef8706e945</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/bef8706e945ac429680af6f6b9132d04c98ff502"><code>bef8706e945</code></a></td>
 <td>Count the partitions with only static data that an OR of static and regular columns keeps</td>
 <td>DataStax-only fix</td>
 <td>+1854</td>
-<td><code>StaticDisjunctionPurgeableTombstonesTest</code>, <code>StaticDisjunctionReplicaDivergenceTest</code>, <code>StaticFilterReplicaDivergenceCasesTest</code> and 3 more</td>
+<td><code>StaticDisjunctionHeldDeletionsTest</code>, <code>StaticDisjunctionReplicaDivergenceTest</code>, <code>StaticFilterReplicaDivergenceCasesTest</code> and 3 more</td>
 </tr>
 <tr>
 <td>086</td>
-<td><code>d00fa3410ea</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/d00fa3410eaa1c1a9d17b85e7b5eb12648f9462f"><code>d00fa3410ea</code></a></td>
 <td>Complete replica filtering protection for replicas whose static row selects fewer rows</td>
 <td>DataStax-only fix</td>
 <td>+819</td>
-<td><code>StaticFilterPartitionDeletionCasesTest</code>, <code>StaticFilterReplicaDivergenceCasesTest</code>, <code>StaticFilterRowSelectionCasesTest</code></td>
+<td><code>StaticFilterRowSelectionCasesTest</code>, <code>StaticFilterPartitionDeletionCasesTest</code>, <code>StaticFilterReplicaDivergenceCasesTest</code></td>
 </tr>
 <tr>
 <td>087</td>
-<td><code>6d56a449bca</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/6d56a449bcad7a81cd681a6076454f97dc134b97"><code>6d56a449bca</code></a></td>
 <td>Order by a vector in a primary key column with the rows of each partition</td>
 <td>DataStax-only fix</td>
 <td>+1579</td>
-<td><code>PrimaryKeyVectorOldPostingsTest</code>, <code>PrimaryKeyVectorPartitionReadTest</code>, <code>PrimaryKeyVectorRowAliveByOlderCellsTest</code> and 5 more</td>
+<td><code>PrimaryKeyVectorRowAliveUnderExpiredMarkerTest</code>, <code>PrimaryKeyVectorPartitionReadTest</code>, <code>PrimaryKeyVectorOldPostingsTest</code> and 5 more</td>
 </tr>
 <tr>
 <td>088</td>
-<td><code>be474291df8</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/be474291df80adc408a17a8277bd89121bd4df2a"><code>be474291df8</code></a></td>
 <td>Don't map a row key to the row id of its partition's static row when ordering by a vector</td>
 <td>DataStax-only fix</td>
 <td>+87</td>
@@ -1317,7 +1365,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>089</td>
-<td><code>15d5fbcac7e</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/15d5fbcac7ed2920de868fd5e3725416d1fe71b8"><code>15d5fbcac7e</code></a></td>
 <td>Brute-force a copy of the keys of a restricted vector memtable search, not a live view</td>
 <td>DataStax-only fix</td>
 <td>+118</td>
@@ -1325,7 +1373,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>090</td>
-<td><code>820800c8532</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/820800c8532dbe414b2d89c5cd0ae3a5e8e3efa5"><code>820800c8532</code></a></td>
 <td>Find the first row of a range without a vector in SAI vector postings before version DC</td>
 <td>DataStax-only fix</td>
 <td>+181</td>
@@ -1333,15 +1381,15 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>091</td>
-<td><code>4f5df98f6e3</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/4f5df98f6e31f2c7369e329e96a34119f94af223"><code>4f5df98f6e3</code></a></td>
 <td>Flush the table before a full index rebuild, so that it indexes writes the index missed</td>
 <td>DataStax-only fix</td>
 <td>+158</td>
-<td><code>SecondaryIndexTest</code>, <code>SecondaryIndexManagerTest</code>, <code>IndexFailureAfterApplyTest</code></td>
+<td><code>SecondaryIndexManagerTest</code>, <code>IndexFailureAfterApplyTest</code>, <code>SecondaryIndexTest</code></td>
 </tr>
 <tr>
 <td>092</td>
-<td><code>ca4909363c8</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/ca4909363c80c5f1ce78328d8cd107ba7ce94666"><code>ca4909363c8</code></a></td>
 <td>Accept partition keys that share a token in SAI version GA, and look them up by key</td>
 <td>DataStax-only fix</td>
 <td>+1697</td>
@@ -1349,7 +1397,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>093</td>
-<td><code>8d9619fa249</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/8d9619fa2490c9c7e2c9d84b5f636dfacb2cba16"><code>8d9619fa249</code></a></td>
 <td>Evaluate CONTAINS on unindexed frozen collections element by element in SAI queries</td>
 <td>Same case as <a href="https://issues.apache.org/jira/browse/CASSANDRA-21863">CASSANDRA-21863</a>; evaluates per element where Apache rejects the query</td>
 <td>+152</td>
@@ -1357,7 +1405,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>094</td>
-<td><code>42e6e2ec137</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/42e6e2ec1374b9913b793536c57e6aa05064e66e"><code>42e6e2ec137</code></a></td>
 <td>Check the type of a class named in SAI analyzer options before initializing it</td>
 <td>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-21525">CASSANDRA-21525</a></td>
 <td>+21</td>
@@ -1365,15 +1413,15 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>095</td>
-<td><code>817347ca894</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/817347ca894d56d8dc9f8608e76a93047dd4359b"><code>817347ca894</code></a></td>
 <td>Fail a read that only an unknown index can serve as an index not available</td>
-<td>Completes <a href="https://issues.apache.org/jira/browse/CASSANDRA-21658">CASSANDRA-21658</a> for ANN, BM25, ORDER BY and <code>:</code></td>
+<td>Extends <a href="https://issues.apache.org/jira/browse/CASSANDRA-21658">CASSANDRA-21658</a> with index-not-available errors</td>
 <td>+873</td>
 <td><code>ReadCommandUnknownIndexTest</code></td>
 </tr>
 <tr>
 <td>096</td>
-<td><code>a23830ebd5d</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/a23830ebd5dea54b32aee85489818b556a8d5b76"><code>a23830ebd5d</code></a></td>
 <td>Accept as many index hints on serialization as the validation accepts</td>
 <td>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-21700">CASSANDRA-21700</a> (<a href="https://github.com/apache/cassandra/commit/1c87f4a8b6328b98c44eef40dcb7e7475199b96e">1c87f4a8b63</a>)</td>
 <td>+31</td>
@@ -1381,7 +1429,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>097</td>
-<td><code>86616f7bf63</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/86616f7bf63a1c09ef43566831649c3da620a44d"><code>86616f7bf63</code></a></td>
 <td>Build the indexers of a write and of an index build without streams</td>
 <td>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-19675">CASSANDRA-19675</a> (<a href="https://github.com/apache/cassandra/commit/ba5ab993c7a279b014f439a5d06683d3b568d4ff">ba5ab993c7a</a>)</td>
 <td>+31</td>
@@ -1389,7 +1437,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>098</td>
-<td><code>72d4f619b3a</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/72d4f619b3a5aa022d4ff34837fe0054047de44a"><code>72d4f619b3a</code></a></td>
 <td>Describe this SAI in its README</td>
 <td>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-16052">CASSANDRA-16052</a> (<a href="https://github.com/apache/cassandra/commit/3e38b3d641c076f45ebc108f68218529766c7492">3e38b3d641c</a>)<br>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-18058">CASSANDRA-18058</a> (<a href="https://github.com/apache/cassandra/commit/cde91e56f09d9ebf315c79c9a81b89f70f4eb724">cde91e56f09</a>)<br>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-18615">CASSANDRA-18615</a> (<a href="https://github.com/apache/cassandra/commit/394d4b116868e4897ad3cc40833df801366a8916">394d4b11686</a>)</td>
 <td>+18</td>
@@ -1397,7 +1445,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>099</td>
-<td><code>c0a17e8c373</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/c0a17e8c373463dd30bdb174b7de0a2731b1a1c9"><code>c0a17e8c373</code></a></td>
 <td>List the query operators SAI indexes serve in the documentation</td>
 <td>Apache documentation (<a href="https://github.com/apache/cassandra/commit/30a200c39f4929bd85e15c09b10e50e15bf0a506">30a200c39f4</a>)</td>
 <td>+26</td>
@@ -1405,7 +1453,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>100</td>
-<td><code>7315a1b014e</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/7315a1b014e5560db71070b3e2f5c9fb93edc781"><code>7315a1b014e</code></a></td>
 <td>Register the SAI segments virtual table under its Apache Cassandra name too</td>
 <td>Apache's virtual table name <code>sai_sstable_index_segments</code></td>
 <td>+48</td>
@@ -1413,15 +1461,15 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>101</td>
-<td><code>72911dd398b</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/72911dd398b180c4abc53291a4ffa2b82e0bc716"><code>72911dd398b</code></a></td>
 <td>Validate the checksums of the vector graph of each SAI segment</td>
 <td>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-21516">CASSANDRA-21516</a></td>
 <td>+311</td>
-<td><code>VectorChecksumValidationTest</code>, <code>VectorTypeTest</code>, <code>V7OnDiskFormatIntegrationTest</code> and 1 more</td>
+<td><code>VectorChecksumValidationTest</code>, <code>V7OnDiskFormatIntegrationTest</code>, <code>VerifyTest</code> and 1 more</td>
 </tr>
 <tr>
 <td>102</td>
-<td><code>79838eeeace</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/79838eeeace5fe3b7facabc7264d5214bbe608fe"><code>79838eeeace</code></a></td>
 <td>Count the synthetic score cells of top-k queries in QueryMetricsTest</td>
 <td>DataStax-only fix</td>
 <td>+9</td>
@@ -1429,7 +1477,7 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>103</td>
-<td><code>2f1db37a433</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/2f1db37a433cd98f81affa11344bedcaaa720d4e"><code>2f1db37a433</code></a></td>
 <td>Match no row with an analyzer match of a value without terms in RowFilter</td>
 <td>DataStax-only fix</td>
 <td>+21</td>
@@ -1437,27 +1485,27 @@ means only the tests came from it. A source without a commit link is named in th
 </tr>
 <tr>
 <td>104</td>
-<td><code>1ea565c5b31</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/1ea565c5b319a9e9258a58dc20e56321c9b71b00"><code>1ea565c5b31</code></a></td>
 <td>Read the sstable through scan readers in SAI index builds</td>
 <td>Port of <a href="https://issues.apache.org/jira/browse/CASSANDRA-21671">CASSANDRA-21671</a> (<a href="https://github.com/apache/cassandra/commit/de8fe4b5d931c37a261912e11d994a6a45c9ef7e">de8fe4b5d93</a>)</td>
 <td>+51</td>
-<td><code>StoppedIndexBuildTest</code>, <code>ScanReaderChunkCacheTest</code></td>
+<td><code>ScanReaderChunkCacheTest</code>, <code>StoppedIndexBuildTest</code></td>
 </tr>
 <tr>
 <td>105</td>
-<td><code>e62738daee6</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/e62738daee62928ddace6dbedc869bf5010c8df1"><code>e62738daee6</code></a></td>
 <td>Compare inet values in SAI as the column type does</td>
 <td>DataStax-only fix</td>
 <td>+580</td>
-<td><code>InetAddressTypeEquivalencyTest</code>, <code>InetOrderTest</code>, <code>InetTest</code> and 1 more</td>
+<td><code>InetOrderTest</code>, <code>InetAddressTypeEquivalencyTest</code>, <code>ApacheIndexUpgradeTest</code> and 1 more</td>
 </tr>
 <tr>
 <td>106</td>
-<td><code>ae493d880df</code></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/commit/ae493d880df3abb679ec52f7602bcaa24e9e7c44"><code>ae493d880df</code></a></td>
 <td>Replace an index whose definition changed under the same name in one schema change</td>
 <td>DataStax-only fix</td>
 <td>+169</td>
-<td><code>SecondaryIndexManagerTest</code>, <code>RedefinedIndexHeldReaderTest</code></td>
+<td><code>RedefinedIndexHeldReaderTest</code>, <code>SecondaryIndexManagerTest</code></td>
 </tr>
 </tbody>
 </table></div>
@@ -1468,8 +1516,16 @@ means only the tests came from it. A source without a commit link is named in th
 import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs";
 const t = document.documentElement.dataset.theme;
 const dark = t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
-mermaid.initialize({ startOnLoad: true, theme: dark ? "dark" : "default", securityLevel: "strict",
-  flowchart: { htmlLabels: true, useMaxWidth: true }, sequence: { useMaxWidth: true } });
+const narrow = matchMedia("(max-width: 900px)").matches;
+const td = [...document.querySelectorAll("pre.mermaid")].filter(p => p.textContent.startsWith("flowchart TD"));
+mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "default", securityLevel: "strict",
+  flowchart: { htmlLabels: true, useMaxWidth: !narrow }, sequence: { useMaxWidth: !narrow } });
+await mermaid.run();
+// on a phone, open each top-down diagram on its first node
+if (narrow) td.forEach(p => {
+  const n = [...p.querySelectorAll("g.node")].map(g => g.getBoundingClientRect()).sort((a, b) => a.top - b.top)[0];
+  if (n) p.scrollLeft = n.left + n.width / 2 - p.getBoundingClientRect().left - p.clientWidth / 2;
+});
 </script>
 </body>
 </html>
