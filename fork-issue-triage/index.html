@@ -1,0 +1,4137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fork Issue Triage</title>
+<meta name="description" content="Triage of the bug reports on the JeremiahDJordan/cassandra fork on 25 November 2026: bug areas, duplicates, merge proposals and issues already fixed upstream.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --fg: #1b2230; --muted: #5a6478; --line: #dde2ea;
+  --accent: #1f6f8b; --accent-soft: #e2f0f5; --code-bg: #eef1f5;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-head: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d; --surface: #191f28; --fg: #e3e8f0; --muted: #9aa5b8; --line: #2b3442;
+    --accent: #6cc3dd; --accent-soft: #173341; --code-bg: #222a36; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d; --surface: #191f28; --fg: #e3e8f0; --muted: #9aa5b8; --line: #2b3442;
+  --accent: #6cc3dd; --accent-soft: #173341; --code-bg: #222a36; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-padding-top: 16px; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.65 var(--font-body); }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 28px 16px 64px;
+  display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 40px; }
+nav.toc { position: sticky; top: 20px; align-self: start; font-size: 13.5px; }
+nav.toc .home { display: block; margin-bottom: 14px; font: 500 12px/1 var(--font-mono); letter-spacing: .06em;
+  text-transform: uppercase; color: var(--accent); text-decoration: none; }
+nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+nav.toc a.s { color: var(--muted); text-decoration: none; display: block; padding: 3px 10px; border-left: 2px solid var(--line); }
+nav.toc a.s:hover, nav.toc a.s:focus-visible { color: var(--accent); border-left-color: var(--accent); }
+main { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 28px 36px 40px; }
+h1 { font: 600 32px/1.2 var(--font-head); margin: 0 0 16px; text-wrap: balance; }
+h2 { font: 600 23px/1.25 var(--font-head); margin: 40px 0 12px; padding-top: 18px; border-top: 1px solid var(--line); }
+h3 { font: 600 17px/1.3 var(--font-head); margin: 28px 0 8px; }
+p, li { max-width: 78ch; }
+a { color: var(--accent); }
+code { font: 13px/1.4 var(--font-mono); background: var(--code-bg); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+.tbl { overflow-x: auto; margin: 14px 0; border: 1px solid var(--line); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+th { background: var(--accent-soft); font-weight: 600; position: sticky; top: 0; }
+tr:last-child td { border-bottom: 0; }
+td code { white-space: nowrap; }
+em { color: var(--muted); }
+pre.mermaid { margin: 16px 0; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  overflow-x: auto; text-align: center; font-family: var(--font-body); }
+#appendix-every-commit ~ .tbl { max-height: 85vh; overflow: auto; }
+.split { display: flex; height: 22px; border-radius: 6px; overflow: hidden; margin: 18px 0 8px; gap: 2px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13.5px; color: var(--muted); margin: 0 0 16px; }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; background: var(--c); }
+.s1 { --c: var(--accent); background: var(--c); } .s2 { --c: #5f9e6e; background: var(--c); } .s3 { --c: #9aa5b8; background: var(--c); }
+.s4 { --c: #c9a227; background: var(--c); } .s5 { --c: #8a6fb8; background: var(--c); }
+.legend span { background: none; }
+@media (max-width: 900px) {
+  .wrap { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  nav.toc { position: static; }
+  nav.toc ol { display: flex; flex-wrap: wrap; gap: 2px 14px; }
+  nav.toc a.s { border-left: 0; padding: 2px 0; }
+  main ul, main ol { padding-left: 22px; }
+  .tbl { max-height: 85vh; }
+  th, td { padding: 8px 6px; }
+  td code { white-space: normal; }
+  td a code, #appendix-every-commit ~ .tbl td code { white-space: nowrap; }
+  td:nth-child(2):last-child { overflow-wrap: anywhere; }
+  main { padding: 20px 16px 32px; }
+  h1 { font-size: 26px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc" aria-label="Contents">
+<a class="home" href="../">AI review guides</a>
+<ol>
+<li><a class="s" href="#snapshot">Snapshot</a></li>
+<li><a class="s" href="#how-the-upstream-check-was-done">How the upstream check was done</a></li>
+<li><a class="s" href="#bug-areas">Bug areas</a></li>
+<li><a class="s" href="#apache-and-datastax-pairs">Apache and DataStax pairs</a></li>
+<li><a class="s" href="#duplicates">Duplicates</a></li>
+<li><a class="s" href="#merge-proposals">Merge proposals</a></li>
+<li><a class="s" href="#closed-in-this-triage">Closed in this triage</a></li>
+<li><a class="s" href="#partly-fixed-upstream">Partly fixed upstream</a></li>
+<li><a class="s" href="#checked-and-still-open">Checked and still open</a></li>
+<li><a class="s" href="#unclear-cases-and-follow-ups">Unclear cases and follow-ups</a></li>
+
+</ol>
+</nav>
+<main>
+<h1>Fork issue triage, 25 November 2026</h1>
+<p>A triage of the bug reports on the <a href="https://github.com/JeremiahDJordan/cassandra/issues">JeremiahDJordan/cassandra</a> fork: what areas they cover, which ones duplicate each other, which ones could be merged, and which ones Apache Cassandra or DataStax had already fixed upstream.</p>
+<h2 id="snapshot">Snapshot</h2>
+<p>Issues and pull requests were listed on 25 November 2026 at 20:24 UTC: <strong>394 issues</strong> (393 open, 1 closed) and <strong>466 pull requests</strong> (462 open), up to issue #859. Other people kept filing issues while this triage ran; issues filed after the snapshot are not covered.</p>
+<p>After this triage, <strong>388 issues are open</strong>: 128 labelled <code>apache</code> (Apache Cassandra code) and 261 labelled <code>datastax</code> (DataStax code); <a href="https://github.com/JeremiahDJordan/cassandra/issues/827">#827</a> carries both labels. 5 issues and 5 pull requests were closed because the fix is already upstream. 457 pull requests are open.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Severity of the open issues</th>
+<th>Issues</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>blocker</td>
+<td>5</td>
+</tr>
+<tr>
+<td>critical</td>
+<td>66</td>
+</tr>
+<tr>
+<td>high</td>
+<td>82</td>
+</tr>
+<tr>
+<td>medium</td>
+<td>98</td>
+</tr>
+<tr>
+<td>low</td>
+<td>122</td>
+</tr>
+<tr>
+<td>(none)</td>
+<td>15</td>
+</tr>
+</tbody>
+</table></div>
+<p>By issue type: 373 Bug, 9 Performance Improvement, 4 Documentation, 2 Feature. Only bugs have a severity label. <a href="https://github.com/JeremiahDJordan/cassandra/issues/549">#549</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/550">#550</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/645">#645</a> have no branch label: each describes a problem that exists only with an unmerged fix for another issue (see the merge proposals).</p>
+<h2 id="how-the-upstream-check-was-done">How the upstream check was done</h2>
+<ul>
+<li>Upstream branches fetched on 25 November 2026: Apache <code>cassandra-4.0</code> <code>ff5a1eb859c</code>, <code>cassandra-4.1</code> <code>14e042c88ed</code>, <code>cassandra-5.0</code> <code>3e3892ce99a</code>, <code>cassandra-6.0</code> <code>243566b968a</code>, <code>trunk</code> <code>25cb50d1f7c</code>; DataStax <code>main</code> <code>f7a7fc031a3</code> and <code>main-4.0</code> <code>b1a64c8e5fe</code>.</li>
+<li>The fork's <code>apache/base-*</code> branches are at the Apache tips. <code>datastax/base-5.0</code> is 16 commits behind <code>datastax/main</code> and <code>datastax/base-4.0</code> 4 commits behind <code>main-4.0</code>. 11 commits reached <code>cassandra-5.0</code> after the commit most Apache 5.0 issues were filed against (<code>fb7f1b7aeeb</code>).</li>
+<li>Every open PR's diff was matched by patch ID against the upstream commits since the bases, and applied (forward and reverse) to the upstream tip of its base. No PR matched an upstream commit exactly and none was already applied. Leaving out <code>CHANGES.txt</code>, 11 no longer apply cleanly; 3 of those are closed below.</li>
+<li>The upstream commits that touch the same code as an issue were read, and for the likely candidates the PR's tests were run on the upstream tip without the fix (and on the old base where needed to confirm they fail there).</li>
+</ul>
+<h2 id="bug-areas">Bug areas</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Open</th>
+<th>Apache</th>
+<th>DataStax</th>
+<th>Severity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#sai-query-results">SAI query results</a></td>
+<td>66</td>
+<td>14</td>
+<td>52</td>
+<td>15 critical, 25 high, 18 medium, 8 low</td>
+</tr>
+<tr>
+<td><a href="#index-builds-and-index-state">Index builds and index state</a></td>
+<td>42</td>
+<td>11</td>
+<td>31</td>
+<td>5 critical, 17 high, 15 medium, 5 low</td>
+</tr>
+<tr>
+<td><a href="#vector-search-bm25-and-order-by">Vector search, BM25 and ORDER BY</a></td>
+<td>38</td>
+<td>12</td>
+<td>26</td>
+<td>16 critical, 9 high, 9 medium, 4 low</td>
+</tr>
+<tr>
+<td><a href="#replica-reconciliation-filtering-paging-and-group-by">Replica reconciliation, filtering, paging and GROUP BY</a></td>
+<td>20</td>
+<td>9</td>
+<td>11</td>
+<td>11 critical, 4 high, 2 medium, 3 (none)</td>
+</tr>
+<tr>
+<td><a href="#cql-literals-bound-collection-values-functions-and-restrictions">CQL literals, bound collection values, functions and restrictions</a></td>
+<td>35</td>
+<td>20</td>
+<td>16</td>
+<td>3 critical, 7 medium, 25 low</td>
+</tr>
+<tr>
+<td><a href="#mixed-versions-and-storage-compatibility">Mixed versions and storage compatibility</a></td>
+<td>19</td>
+<td>1</td>
+<td>18</td>
+<td>4 critical, 5 high, 1 medium, 8 low, 1 (none)</td>
+</tr>
+<tr>
+<td><a href="#sai-resources-metrics-options-and-documentation">SAI resources, metrics, options and documentation</a></td>
+<td>19</td>
+<td>1</td>
+<td>18</td>
+<td>1 high, 1 medium, 9 low, 8 (none)</td>
+</tr>
+<tr>
+<td><a href="#trie-memtable-and-byte-comparable-values">Trie memtable and byte-comparable values</a></td>
+<td>17</td>
+<td>1</td>
+<td>16</td>
+<td>3 blocker, 5 critical, 3 high, 2 medium, 4 low</td>
+</tr>
+<tr>
+<td><a href="#compaction-sstables-and-tools">Compaction, SSTables and tools</a></td>
+<td>16</td>
+<td>4</td>
+<td>12</td>
+<td>2 blocker, 2 critical, 2 high, 4 medium, 5 low, 1 (none)</td>
+</tr>
+<tr>
+<td><a href="#cluster-metadata-tcm-and-upgrades-to-60">Cluster metadata (TCM) and upgrades to 6.0</a></td>
+<td>15</td>
+<td>15</td>
+<td>0</td>
+<td>2 high, 11 medium, 2 low</td>
+</tr>
+<tr>
+<td><a href="#only_purge_repaired_tombstones">only_purge_repaired_tombstones</a></td>
+<td>12</td>
+<td>6</td>
+<td>6</td>
+<td>6 high, 2 medium, 4 low</td>
+</tr>
+<tr>
+<td><a href="#schema-changes-dropped-columns-and-user-types">Schema changes, dropped columns and user types</a></td>
+<td>11</td>
+<td>5</td>
+<td>6</td>
+<td>2 critical, 1 high, 7 medium, 1 low</td>
+</tr>
+<tr>
+<td><a href="#legacy-secondary-indexes">Legacy secondary indexes</a></td>
+<td>8</td>
+<td>2</td>
+<td>6</td>
+<td>3 critical, 5 medium</td>
+</tr>
+<tr>
+<td><a href="#auto-repair">Auto-repair</a></td>
+<td>6</td>
+<td>6</td>
+<td>0</td>
+<td>4 medium, 2 low</td>
+</tr>
+<tr>
+<td><a href="#client-protocol-and-buffers">Client protocol and buffers</a></td>
+<td>6</td>
+<td>2</td>
+<td>4</td>
+<td>1 high, 2 medium, 3 low</td>
+</tr>
+<tr>
+<td><a href="#hints">Hints</a></td>
+<td>4</td>
+<td>2</td>
+<td>2</td>
+<td>1 high, 2 medium, 1 low</td>
+</tr>
+<tr>
+<td><a href="#commit-log-and-durability">Commit log and durability</a></td>
+<td>4</td>
+<td>3</td>
+<td>1</td>
+<td>2 high, 2 low</td>
+</tr>
+<tr>
+<td><a href="#gossip-membership-reads-and-other">Gossip, membership, reads and other</a></td>
+<td>14</td>
+<td>6</td>
+<td>8</td>
+<td>3 high, 5 medium, 5 low, 1 (none)</td>
+</tr>
+<tr>
+<td><a href="#test-harness-build-and-ci">Test harness, build and CI</a></td>
+<td>36</td>
+<td>8</td>
+<td>28</td>
+<td>1 medium, 34 low, 1 (none)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Each issue is in one area, by what its fix changes. The four SAI and vector search areas hold 165 of the 388 open issues (43%).</p>
+<h3 id="sai-query-results">SAI query results</h3>
+<p>Storage-attached index (SAI) queries that return wrong rows, miss rows or fail, outside vector search: negations (<code>!=</code>, <code>NOT IN</code>, <code>NOT CONTAINS</code>), empty values and empty bounds, analyzers, collections and map entries, <code>inet</code>, <code>decimal</code> and <code>varint</code> ordering, descending clustering columns, values written in another serialization, token collisions, the memtable index under concurrent writes and updates, strict filtering across replicas, and the term size guardrails.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Code</th>
+<th>Branches</th>
+<th>Severity</th>
+<th>Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/128">#128</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>critical</td>
+<td>SAI queries on two columns with a limit or paging return no rows at LOCAL_QUORUM in a datacenter with a single replica</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/133">#133</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>critical</td>
+<td>Paged partition-restricted index queries without strict filtering return rows of other partitions or page around the ring forever</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/198">#198</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>SAI index on a partition key component misses the partitions that only have a static row after an index build or a compaction, and CREATE INDEX on a ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/199">#199</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>A WHERE clause with an OR of a static column and a regular column is evaluated as an AND: pk1 = 3 AND (v = 1 OR st = 2) drops matching rows</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/221">#221</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>Concurrent writes of a row on a skip-list memtable can drop the row from its SAI index</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/225">#225</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>A value that was already expired when the SAI memtable index got it, written again unchanged, leaves the row out of the index until compaction</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/239">#239</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>SAI ignores RowFilter#isStrict: a row whose matching columns are on different replicas is never returned at consistency levels that reconcile</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/246">#246</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>SAI on DESC inet, varint and decimal clustering columns: ranges return no rows, flushes fail, and decimal indexes fail queries and compaction</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/249">#249</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>SAI term size guardrails are never enforced: oversized terms are written but left out of the index, and vectors are lost on compaction</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/266">#266</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>SAI memtable index under-skips into another partition's keys when an index mixes static and regular row keys: skipTo assertion, or a matching row ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/277">#277</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>After ALTER TYPE ... ADD, SAI indexes on frozen values of the type return no rows, and ENTRIES indexes fail writes, reads and compaction</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/373">#373</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>SAI: an index caches the descriptor of an early-opened compaction result, and the final SSTable is missing from every index until restart</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/426">#426</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>critical</td>
+<td>SAI doesn't return range tombstones for filters on static columns, so replica filtering protection returns deleted rows</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/696">#696</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>SAI filtering of an unindexed map entry fails or misses rows when the key or value doesn't fit in a composite (65535-byte key, value over 65535 bytes)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/707">#707</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>SAI: a range with != or NOT IN on a literal column filtered in another index's read returns no rows</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/226">#226</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>SAI misses rows updated to the empty value in the memtable: v = '' and CONTAINS '' don't find them, also after flush</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/227">#227</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>An update in the memtable removes a row from an SAI term the row still holds: a duplicate collection element, a decimal with another scale, a long ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/242">#242</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>Non-strict SAI reads with all index matches repaired still intersect unindexed expressions strictly and lose rows split across replicas</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/247">#247</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>SAI on a DESC clustering column doesn't index the empty value and serves !=, NOT IN and uuid ranges that the ASC index rejects</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/251">#251</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>SAI misses equal values written in another serialization in frozen values, map entries and varints (2.5 vs 2.50, 0x0001 vs 0x01)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/252">#252</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>!= on SAI map entries and frozen values before on-disk version db misses rows whose bytes sort differently from their values</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/253">#253</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>SAI NOT CONTAINS and NOT CONTAINS KEY miss rows whose collection held the value in an expired or overwritten element</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/254">#254</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>m[k] != v on an SAI map entries index misses rows without the key and rows with a null or empty map</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/255">#255</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>Key scans of SAI negations can skip back into a partition they already returned rows of, looping until the query times out</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/256">#256</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>SAI negations on an indexed static collection miss the partitions that only have a static row</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/279">#279</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>Analyzed CONTAINS of several words matches words in different elements on the replica, and analyzed NOT CONTAINS excludes the rows holding any of ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/370">#370</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>high</td>
+<td>SAI: index files written by Apache Cassandra 5.0 are parsed as DSE 6.8 files</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/429">#429</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>Analyzed SAI NOT CONTAINS drops the rows holding an element the analyzer makes no term of</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/503">#503</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>high</td>
+<td>SAI orders and compares inet values as IPv6, so range and equality queries return other rows than filtering without SAI</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/504">#504</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>SAI orders and compares inet values as IPv6, so range and equality queries return other rows than filtering without SAI</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/515">#515</a></td>
+<td>Apache</td>
+<td>5.0, trunk</td>
+<td>high</td>
+<td>SAI: a replica that doesn't know a non-tokenizing index answers = and CONTAINS reads without its options and misses rows</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/516">#516</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>SAI: a replica that doesn't know an analyzed collection index answers CONTAINS reads without the analyzer and misses rows</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/594">#594</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>SAI on a DESC inet clustering column: the SSTable index's term range is narrowed or inverted, and index builds and compactions can fail</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/627">#627</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>SAI: IN with several values on an analyzed column fails, and the index ORs the terms of each value</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/725">#725</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>high</td>
+<td>SAI: the restrictions left to filtering on a column with an analyzed index (!=, IN, NOT IN, NOT CONTAINS, NOT CONTAINS KEY) compare raw values, ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/726">#726</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>high</td>
+<td>SAI filtering of an unindexed map entry fails the read when a row holds an entry whose key or value is over 65535 bytes</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/727">#727</a></td>
+<td>Apache</td>
+<td>6.0, trunk</td>
+<td>high</td>
+<td>Map entry restrictions on a frozen map partition key match every partition (fm[k] = v, fm[k] != v)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/758">#758</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>SAI: != and NOT IN on a column whose analyzed index serves = as a match compare raw values, while = uses the analyzer</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/785">#785</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>high</td>
+<td>SAI term size failure threshold isn't applied when the warning threshold is disabled, or when the analyzer makes a term larger than the value: the ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/798">#798</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>high</td>
+<td>SAI sstable index writer checks the size of an analyzed value instead of its terms: compaction and index rebuild index different rows than the ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/200">#200</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>A partition without matching rows is returned as its static content when the row restrictions are inside an OR: pk = 13 AND (v = 1 OR v = 9)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/248">#248</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>SAI queries with an empty value as a bound on a non-literal index fail the read</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/250">#250</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>Map entries with a key or value of 65535 bytes or more on an SAI ENTRIES index fail the write after it is applied, and break index builds and ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/275">#275</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>SAI memtable index misses empty frozen tuple and UDT values for != and NOT IN, and != of an empty value fails the read</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/276">#276</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>SAI version GA rejects distinct partition keys that share a token, and SAI primary key maps resolve such keys by token</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/282">#282</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>NOT CONTAINS KEY on an analyzed map KEYS index fails with NullPointerException for a row without the map</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/395">#395</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>SAI row estimates fail queries on infinite and NaN floats and on very large varints and decimals, and DESC float and double estimates are far off</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/430">#430</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>SAI AND of two indexes fails with &quot;skipTo skipped to an item smaller than the target&quot; on SSTables of SAI versions ga and ec</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/465">#465</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>SAI queries with CONTAINS on an unindexed frozen collection fail with IndexOutOfBoundsException</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/469">#469</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>An analyzed : match of a value without terms matches every row in RowFilter and none through the SAI index</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/532">#532</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>medium</td>
+<td>SAI range restrictions with the empty value as a bound fail the read on non-literal indexes</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/533">#533</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>medium</td>
+<td>SAI leaves the iterators of earlier segments and SSTable indexes open when a later search of the query fails</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/541">#541</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>medium</td>
+<td>SAI returns a wide partition without a partition deletion written during the search, with the deletion applied to its later rows</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/542">#542</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>SAI returns a wide partition without a partition deletion written during the search, with the deletion applied to its later rows</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/600">#600</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>SAI range estimates on decimals with far-apart exponents stall or fail the query</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/730">#730</a></td>
+<td>Apache</td>
+<td>6.0, trunk</td>
+<td>medium</td>
+<td>During an upgrade from 5.0, 6.0 coordinators send SAI reads with != or non-strict IN that 5.0 replicas ignore or reject</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/763">#763</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>SAI: a match of a value the query analyzer makes no terms of returns the rows holding '' when the index analyzer keeps the empty term</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/797">#797</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>medium</td>
+<td>SAI term size guardrail isn't applied to a partition key component written by a static-only insert: the write succeeds and the index misses the ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/79">#79</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>IN on an SAI-indexed partition key column is rejected in key range queries</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/183">#183</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>A filtered (c) IN ((x), (y)) with a null element fails the read when an SAI index serves the query</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/271">#271</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>SAI range query with a value over 65535 bytes times out instead of failing with InvalidRequestException</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/280">#280</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>SAI range on a map entry with a key of 32768 bytes or more fails</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/281">#281</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>SAI queries on partition keys that share a token fail or return wrong rows when SAI version aa is the write version</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/301">#301</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>With a tokenizing analyzer, NOT CONTAINS '' only returns the rows without the collection</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/560">#560</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>SegmentFlushTest leaves ~43 GB of temporary index files behind</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/786">#786</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>SAI: a client write whose analyzed term is over the term size failure threshold is accepted, and the term not indexed, when the value as written is ...</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="index-builds-and-index-state">Index builds and index state</h3>
+<p>An index that becomes queryable without some SSTables, or loses or reuses index files: index builds that overlap streaming, import, compaction, TRUNCATE, <code>rebuild_index</code> or a restart; an index dropped and created again under the same name; build state kept by index name in <code>SecondaryIndexManager</code>. Mostly SAI, some shared with legacy indexes.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Code</th>
+<th>Branches</th>
+<th>Severity</th>
+<th>Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/134">#134</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>critical</td>
+<td>SAI index created while a stream is received silently misses the rows of the streamed SSTables</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/368">#368</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>critical</td>
+<td>SAI: an index created while a stream is received, or before streamed or imported SSTables are added, misses their rows</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/369">#369</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>SAI: a new index adopts the files of a dropped or imported index of the same name and returns wrong results</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/583">#583</a></td>
+<td>DataStax</td>
+<td>main-4.0</td>
+<td>critical</td>
+<td>SAI: a stopped index rebuild reports success and leaves the index answering without the SSTable</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/748">#748</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>critical</td>
+<td>SAI: an index created over SSTables that already have per-SSTable SAI files misses rows after a row that expired since the flush or a tombstone-only ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/161">#161</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>high</td>
+<td>An SAI index created just before streamed or imported SSTables are added misses their rows, and a failed index build leaves those SSTables in the ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/360">#360</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>SAI: at startup an SSTable whose index components fail to load counts as indexed, so the index is queryable without it</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/374">#374</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>high</td>
+<td>SAI: an initial index build becomes queryable without the SSTables restored by a compaction stopped during the build</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/375">#375</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>SAI: indexes stay queryable without an SSTable that comes back without its per-SSTable components</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/376">#376</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>high</td>
+<td>SAI: nodetool rebuild_index makes its index queryable without an SSTable removed and added again during the rebuild</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/379">#379</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>nodetool rebuild_index doesn't flush the memtable when the index is writable, so it reports success while a write the index missed stays missing</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/382">#382</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>high</td>
+<td>SAI: CREATE INDEX makes the index queryable without an SSTable reloaded during its build (index summary redistribution)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/513">#513</a></td>
+<td>Apache</td>
+<td>5.0, trunk</td>
+<td>high</td>
+<td>SAI: a replica whose index of the same name was recreated with other options answers reads with its own options and can miss rows</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/514">#514</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>SAI: a replica whose index of the same name was recreated with other options answers reads with its own analyzer and can miss rows</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/527">#527</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, trunk</td>
+<td>high</td>
+<td>Secondary indexes: a node that gets an index dropped and created again with other options in one schema change keeps the old index</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/528">#528</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>Secondary indexes: a node that gets an index dropped and created again with other options in one schema change keeps the old index</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/538">#538</a></td>
+<td>Apache</td>
+<td>5.0, trunk</td>
+<td>high</td>
+<td>SAI: a new index uses the files of a dropped index of the same name while a query holds them</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/585">#585</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>high</td>
+<td>SAI: TRUNCATE makes an index queryable that misses an SSTable the truncate kept</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/586">#586</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>SAI: TRUNCATE makes an index queryable that misses an SSTable the truncate kept</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/630">#630</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>SAI: an index build waiting for another build's per-SSTable files reports success when that build fails, leaving the index queryable without the ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/631">#631</a></td>
+<td>DataStax</td>
+<td>main-4.0</td>
+<td>high</td>
+<td>SAI: two builds of the same index on one SSTable write the same files at once, so queries fail and the index loses its files</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/635">#635</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>SAI: an SSTable whose complete index components fail to load is treated as indexed, and the index becomes queryable without it</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/6">#6</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>medium</td>
+<td>DROP INDEX fails with &quot;was already marked compacted&quot; after a legacy index is re-created with the same name during a compaction</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/31">#31</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>DROP INDEX of a legacy index while it is in use can fail the build, write, compaction or read with a NullPointerException in SingletonIndexGroup</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/361">#361</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>SAI: an already built index becomes queryable at restart only after gossip has started</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/371">#371</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>medium</td>
+<td>SAI: the index build before nodetool import adds SSTables treats them as live, and a failed build makes the index non-queryable</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/372">#372</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>Secondary indexes: the build of a dropped index changes the build state of a new index of the same name</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/378">#378</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>Secondary indexes: if CompactionManager#submitIndexBuild throws, the indexes stay queryable without the SSTables and count as building forever</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/534">#534</a></td>
+<td>Apache</td>
+<td>5.0, trunk</td>
+<td>medium</td>
+<td>Secondary indexes: the build of a dropped index changes the build state of a new index of the same name</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/559">#559</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>SAI: a full rebuild of a dropped index deletes, when it aborts, the files of a new index of the same name</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/564">#564</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>SAI: with immutable components, a rebuild that fails after writing the per-SSTable components leaves a generation that the next build registers, and ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/582">#582</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>medium</td>
+<td>SAI: a TRUNCATE during an index's initial build leaves the index non-queryable</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/603">#603</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>Index builds: one failing index type marks the other indexes of the build failed while they are still building</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/612">#612</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>medium</td>
+<td>SAI: an index built on an early-opened compaction result is missing from the final SSTable's TOC and components, and whole-SSTable streaming of that ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/636">#636</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>SAI: the truncate task can make an index queryable over a flush whose index failed to load meanwhile</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/637">#637</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>SAI: TOC of SSTables written by streaming and other non-compaction operations lists index components that weren't written</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/647">#647</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>medium</td>
+<td>SAI: a failed or stopped index build of streamed or imported SSTables makes the index non-queryable, though they are never added</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/174">#174</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>low</td>
+<td>An SAI index created while the node is starting misses the rows of SSTables that a stream or an import is adding</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/381">#381</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>SAI: a partial build that fails during nodetool rebuild_index is overridden when the rebuild completes, leaving the index queryable without the ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/535">#535</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, trunk</td>
+<td>low</td>
+<td>SASI: a dropped index stays subscribed to its table's tracker</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/613">#613</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>Secondary indexes: a rebuild whose SAI index is dropped before its build starts leaves the other indexes of the rebuild building until restart</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/634">#634</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>Secondary indexes: a schema change fails while the build counter of an index that doesn't register itself is above zero</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="vector-search-bm25-and-order-by">Vector search, BM25 and ORDER BY</h3>
+<p>ANN, BM25 and generic <code>ORDER BY</code> queries: rows lost or repeated with static columns, partition and token restrictions, <code>IN</code> and negations applied after the top-k, the vector memtable index under concurrent writes and TRUNCATE, vector graph and flush failures, and vector columns of user types.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Code</th>
+<th>Branches</th>
+<th>Severity</th>
+<th>Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/80">#80</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>Concurrent writes can lose VectorMemtableIndex key bounds updates, so ANN queries can miss memtable rows</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/137">#137</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>critical</td>
+<td>Concurrent writes of one row can leave the SAI vector memtable index with a wrong, missing or extra vector for it</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/178">#178</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>critical</td>
+<td>SAI vector memtable index keeps the old vector of a row when a delete leaves the row with no live data, so ANN queries rank the row by a vector it ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/202">#202</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>SAI ORDER BY returns only the first row of each partition for a static vector column, and the first rows instead of the best ones with PER PARTITION ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/222">#222</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>Concurrent writes of one row on a skip-list memtable can leave the SAI vector memtable index with a wrong, missing or extra vector for it</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/223">#223</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>A vector memtable index flush fails with &quot;value already present&quot; when a row id is in the postings of two vectors, and keeps failing</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/224">#224</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>Partition-restricted ANN and token sub-range replica reads miss a row that got its vector by an UPDATE while the row is in the memtable</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/479">#479</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>After a TRUNCATE without a flush, a write racing it can leave the truncated memtable's SAI index live: ANN queries return the truncated row or fail</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/495">#495</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>critical</td>
+<td>After a TRUNCATE without a flush, a write racing it can leave the truncated memtable's SAI index live, and ANN queries return the truncated row</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/742">#742</a></td>
+<td>Apache</td>
+<td>5.0</td>
+<td>critical</td>
+<td>SAI vector search with IN on another indexed column applies the IN after the top-k and returns fewer rows than the limit</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/744">#744</a></td>
+<td>Apache</td>
+<td>6.0, trunk</td>
+<td>critical</td>
+<td>SAI vector search with IN on another indexed column returns no rows on cassandra-6.0 and trunk</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/746">#746</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>critical</td>
+<td>SAI vector search with an equality restriction on an indexed static column returns no rows</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/759">#759</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>critical</td>
+<td>SAI vector search ordered by a static vector column with a restriction on another indexed column returns no rows</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/775">#775</a></td>
+<td>Apache</td>
+<td>6.0, trunk</td>
+<td>critical</td>
+<td>SAI vector search with a negated restriction (!=, NOT IN, NOT CONTAINS, NOT CONTAINS KEY) returns fewer rows than its limit, or none</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/787">#787</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>critical</td>
+<td>SAI vector search with a restriction on another indexed column fails with ReadFailureException when the query reads some but not all static columns</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/788">#788</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>critical</td>
+<td>SAI vector search ordered by a static vector column skips the partitions that only have static data</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/190">#190</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>high</td>
+<td>SAI vector queries never complete after a vector search fails: the SSTable indexes are released twice</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/203">#203</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>SAI ORDER BY with a predicate on a static column or a partition key component returns no rows, too few rows, or fails with NullPointerException</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/204">#204</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>SAI ANN on a vector in a primary key column misses rows, returns rows twice or returns deleted rows when partitions have static rows</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/205">#205</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>high</td>
+<td>SAI ANN with a predicate loses rows of a partition with a static row when the plan filters first</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/206">#206</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>high</td>
+<td>SAI ORDER BY with a predicate fails with ClassCastException &quot;RangeTombstoneBoundMarker cannot be cast to Row&quot; when a range deletion covers the row</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/209">#209</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>SAI ANN with a partition or token restriction returns no rows from SSTables of versions CA and DB when the first row of the range has no vector</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/210">#210</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>Generic ORDER BY on tables with clustering columns returns one row per partition, or fails, when an SAI index has version AA</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/452">#452</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>Vector memtable indexes searched with a key range stay on the heap after their memtable is flushed or their table is dropped</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/471">#471</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>A table with an SAI vector index can't flush on a node with several data directories</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/32">#32</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>ANN queries can fail with ReadFailureException: PairedSlidingWindowReservoir snapshots can contain nulls</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/176">#176</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>medium</td>
+<td>SAI vector query with another predicate or a partition restriction fails with &quot;AssertionError: low must be less than high: 0 &gt;= 0&quot; on an SSTable ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/207">#207</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>BM25 and scored ANN queries fail with ClassCastException when a row was deleted and written again</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/208">#208</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>SAI ANN with a partition restriction fails with ArrayIndexOutOfBoundsException in SortingIterator during concurrent writes</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/211">#211</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>SAI vector graph written by a compaction or an index rebuild can have a node that no other node links to, so ANN queries never return its rows</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/269">#269</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>Ordered SAI queries (ANN, BM25, ORDER BY) restricting an unindexed clustering column of a fully restricted partition are rejected</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/273">#273</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>With -Dcassandra.float_only_vectors=false SAI accepts ANN indexes on non-float vectors, whose results are meaningless</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/307">#307</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>ORDER BY on a clustering column and the non_partition_restricted_index_query_enabled guardrail miss index restrictions nested in disjunctions</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/467">#467</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>SAI checksum validation skips the vector graph, and every vector component before version ec</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/212">#212</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>SAI ANN with ann_options {'rerank_k': 0} on a vector in a primary key column fails with NullPointerException from SSTables</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/359">#359</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>SAI: flushes of a table with a vector index fail in VectorPostings.computeRowIds when UCS splits them into shards</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/468">#468</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>A replica that doesn't know an SAI index yet fails ANN, BM25 and : reads with an internal error instead of INDEX_NOT_AVAILABLE</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/478">#478</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>On-disk SAI vector graph searchers are never closed, so each keeps a buffer pool buffer when SAI files aren't memory-mapped</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="replica-reconciliation-filtering-paging-and-group-by">Replica reconciliation, filtering, paging and GROUP BY</h3>
+<p>Coordinator-side merging of replica responses: replica filtering protection (RFP) and short read protection (SRP) with static columns, range tombstones and limits; <code>GROUP BY</code> with limits and paging; filtering on collections with deleted elements.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Code</th>
+<th>Branches</th>
+<th>Severity</th>
+<th>Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/10">#10</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>critical</td>
+<td>GROUP BY with a limit or paging fails with &quot;open RT bound as its last item&quot;, or counts deleted rows, when the limits stop in a range tombstone</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/129">#129</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>critical</td>
+<td>Replica filtering protection returns deleted rows for filters on static columns when replicas diverge</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/131">#131</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>critical</td>
+<td>Filtering on a collection matches deleted and expired elements and entries</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/135">#135</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>critical</td>
+<td>GROUP BY queries with a limit or paging lose groups and static rows when short read protection reaches a replica that stopped at the group limit</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/180">#180</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>critical</td>
+<td>Filtered GROUP BY queries with a limit fail with NullPointerException in Row.Merger on tables with a non-frozen collection</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/236">#236</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>Filtering on a collection matches deleted and expired elements (static collections; regular collections at reconciling consistency levels)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/237">#237</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>GROUP BY queries with a limit or paging lose groups and static rows when short read protection reaches a replica that stopped at the group limit</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/243">#243</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>Replica filtering protection returns deleted rows, and misses rows, for filters on static columns when replicas diverge</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/272">#272</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>GROUP BY with a limit or paging fails with &quot;open RT bound as its last item&quot;, or counts deleted rows, when the limits stop in a range tombstone</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/425">#425</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>critical</td>
+<td>Replica filtering protection returns rows deleted by a range tombstone that spans the pages of a single-partition read with LIMIT</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/813">#813</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>critical</td>
+<td>Paged filtering reads with a static column expression miss rows that only replicas returning nothing for the page hold</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/132">#132</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>high</td>
+<td>PER PARTITION LIMIT returns too many rows when replica filtering protection splits a single-partition read</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/238">#238</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>high</td>
+<td>PER PARTITION LIMIT returns too many rows when replica filtering protection splits a single-partition read</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/240">#240</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>high</td>
+<td>Filtering without an index misses a row whose match needs one replica's static row and another replica's row</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/241">#241</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>Filtering without an index misses a row whose match needs one replica's static row and another replica's row</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/196">#196</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>medium</td>
+<td>GROUP BY queries with PER PARTITION LIMIT fail with IllegalArgumentException &quot;Cannot create bounds/boundary objects without clustering values&quot; when ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/201">#201</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>Paged queries with LIMIT or PER PARTITION LIMIT and an OR of a static and a regular column return more rows than the limit</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/167">#167</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>(none)</td>
+<td>Replica filtering protection makes needless short read protection requests: range reads ask each replica for the rest of a partition even when the ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/231">#231</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>(none)</td>
+<td>Replica filtering protection makes needless short read protection requests: range reads ask each replica for the rest of a partition even when the ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/645">#645</a></td>
+<td>DataStax</td>
+<td>(none)</td>
+<td>(none)</td>
+<td>GROUP BY queries make short read protection requests to every replica when the replicas agree</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="cql-literals-bound-collection-values-functions-and-restrictions">CQL literals, bound collection values, functions and restrictions</h3>
+<p>Collection, tuple and UDT literals in the selection and as function arguments, bound collection values stored unsorted or with duplicates, zero-length elements, <code>ReversedType</code> (descending clustering columns), <code>IN</code> with null or unset elements, multi-column relations, and user-defined functions returning collections.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Code</th>
+<th>Branches</th>
+<th>Severity</th>
+<th>Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/829">#829</a></td>
+<td>Apache</td>
+<td>6.0, trunk</td>
+<td>critical</td>
+<td>A set or map nested in a bound collection value is stored unsorted and with duplicates</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/842">#842</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>critical</td>
+<td>A set or map in a bound value for a descending clustering column, a tuple, a UDT or a vector is stored unsorted and with duplicates</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/843">#843</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>A set or map in a bound value for a descending clustering column, a tuple or a UDT is stored unsorted and with duplicates</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/136">#136</a></td>
+<td>Apache</td>
+<td>4.1, 5.0</td>
+<td>medium</td>
+<td>IN with a null element before other elements matches nothing in filtered queries</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/213">#213</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>Reads that select an open-ended collection slice (m[1..], s[..5]) fail with UnsupportedOperationException when they are sent to a replica, including ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/664">#664</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>!= on a counter column fails the read with UnsupportedOperationException</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/760">#760</a></td>
+<td>DataStax</td>
+<td>main-4.0</td>
+<td>medium</td>
+<td>RowFilter reads a deleted static cell as an empty value on the replica</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/827">#827</a></td>
+<td>Apache/DataStax</td>
+<td>4.0, 4.1, 5.0, main-4.0, main-5.0</td>
+<td>medium</td>
+<td>A bound frozen list with a zero-length element is stored with a null element, and commit log replay then fails</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/837">#837</a></td>
+<td>Apache</td>
+<td>6.0, trunk</td>
+<td>medium</td>
+<td>A zero-length element bound in IN ? is treated as null: the query fails, and an IN condition gives the wrong outcome</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/844">#844</a></td>
+<td>Apache</td>
+<td>6.0, trunk</td>
+<td>medium</td>
+<td>Multi-column restrictions reject set and list literals, and {} for a map, on descending clustering columns</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/7">#7</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>low</td>
+<td>to_json and SELECT JSON fail with NullPointerException on a collection literal with a null element</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/8">#8</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>low</td>
+<td>Function calls with a list or map literal of another type, like count([v1, v2]), fail with a server error</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/9">#9</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>low</td>
+<td>Whether function calls on nested collection literals are accepted depends on the JVM run</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/21">#21</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>low</td>
+<td>Set and map literals in the selection fail with NullPointerException when an element or a key is null</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/22">#22</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>low</td>
+<td>Collection literals in the selection accept elements of another type, such as [i, txt] or [v, (i)], and return malformed values</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/90">#90</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>CQL rejects mixing frozen and non-frozen UDT values in collection literals, casts and generic functions where Apache Cassandra accepts them</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/94">#94</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>mask_replace fails an assertion for two tuple literals of the same type</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/150">#150</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>low</td>
+<td>NullPointerException in multi-column relations with a tuple bound to null</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/159">#159</a></td>
+<td>Apache</td>
+<td>4.1, 5.0</td>
+<td>low</td>
+<td>An unset element of a filtered IN restriction matches the rows whose value is empty</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/169">#169</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>low</td>
+<td>Function calls with a list literal argument are rejected with &quot;Unexpected receiver type&quot; when an overload of another type is tested, and a slice of ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/171">#171</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>List and map literals passed to a function parameter of another type give a server error, and fail overload resolution in INSERT, UPDATE and WHERE</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/182">#182</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>A filtered IN with a null element fails with NullPointerException; Apache Cassandra 5.0 ignores the null element</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/188">#188</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>low</td>
+<td>SELECT JSON and to_json fail with IndexOutOfBoundsException on a tuple value with fewer components than its type</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/192">#192</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>low</td>
+<td>List and set literals in the selection get the type of their first element even when a later element's type is wider, so SELECT [tp, tp3] drops a ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/233">#233</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>NullPointerException in multi-column relations with a tuple bound to null</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/502">#502</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>CONTAINS and CONTAINS KEY on a descending frozen collection clustering column are rejected (CASSANDRA-21742 missing)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/507">#507</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>low</td>
+<td>The empty literal {} for a descending frozen map clustering column fails with ClassCastException</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/508">#508</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>The empty literal {} for a descending frozen map clustering column fails with ClassCastException</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/512">#512</a></td>
+<td>DataStax</td>
+<td>main-4.0</td>
+<td>low</td>
+<td>Filtering with IN treats a 4-byte inet address and its IPv4-mapped form as equal on main-4.0</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/643">#643</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>SELECT [vi, i] with a varint vi and an int i is rejected; Apache Cassandra 5.0 returns a list<varint></td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/709">#709</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>CREATE OR REPLACE FUNCTION/AGGREGATE that changes only DETERMINISTIC or MONOTONIC is not applied</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/840">#840</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>low</td>
+<td>A set or map returned by a Java user-defined function or aggregate is not sorted, and is used unsorted in keys, IN, conditions and element selection</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/841">#841</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>A set or map returned by a Java user-defined function or aggregate is not sorted, and is used unsorted in keys, IN, conditions and element selection</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/853">#853</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>low</td>
+<td>A user-defined function returning a collection is rejected for a descending frozen collection clustering column, and in multi-column restrictions</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/857">#857</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>low</td>
+<td>A ReversedType type hint for a map, tuple or list literal in the selection fails with a server error</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="mixed-versions-and-storage-compatibility">Mixed versions and storage compatibility</h3>
+<p>DataStax nodes running beside Apache Cassandra nodes, or rolling back to them: row filter features and verbs that Apache Cassandra 5.0 replicas can't read, schema table layouts, SSTable format versions and deletion times after 2038, gossip value sizes, error codes.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Code</th>
+<th>Branches</th>
+<th>Severity</th>
+<th>Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/257">#257</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>critical</td>
+<td>Row filter features that Apache Cassandra 5.0 can't read are sent to Apache Cassandra 5.0 replicas: OR is evaluated as AND, map entry ranges as ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/689">#689</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>critical</td>
+<td>SAI range reads send the DataStax-only MULTI_RANGE_REQ verb to Apache Cassandra 5.0 replicas</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/739">#739</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>critical</td>
+<td>DataStax 5.0 coordinators send SAI-filtered != and non-strict IN reads that Apache Cassandra 5.0 replicas ignore or refuse</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/814">#814</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>critical</td>
+<td>BTI da sstables encode a null field of a tuple, UDT or frozen collection key differently from Apache Cassandra 5.0: reads of the other ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/96">#96</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>high</td>
+<td>Nodes cannot start with a table that has a duration in a sorted position (CNDB-9753 compatibility mode missing)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/649">#649</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>high</td>
+<td>BTI cc sstables record a max local deletion time past 2038 as 2038, so compaction drops them whole in 2038 while their data is live</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/662">#662</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>high</td>
+<td>BTI writes &quot;cc&quot; in every storage compatibility mode, so partition deletions after 2038 are purgeable at once</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/677">#677</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>high</td>
+<td>ANN queries with synthetic scores fail on Apache Cassandra 5.0 replicas, which can't deserialize the score column</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/740">#740</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>high</td>
+<td>DataStax 5.0 coordinators send SAI-filtered CONTAINS on frozen collections that Apache Cassandra 5.0 replicas evaluate on the whole collection</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/816">#816</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>medium</td>
+<td>A node bootstrapping beside Apache Cassandra 5.0 nodes can fail schema readiness: a peer's schema version that becomes the local version by merging ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/650">#650</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>low</td>
+<td>Droppable tombstone estimate ignores deletion times after 2038: TombstoneHistogram#sum narrows gcBefore to int</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/665">#665</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>SAI index status gossip format is chosen by release version; the legacy format can exceed the gossip value limit</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/668">#668</a></td>
+<td>DataStax</td>
+<td>main-4.0</td>
+<td>low</td>
+<td>SAI index status gossiped by 4.0 can exceed the 65535-byte limit of a gossiped value</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/675">#675</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>CASSANDRA_4: system_schema.functions and aggregates carry DataStax-only columns that Apache Cassandra 4.x can't read, blocking a rollback</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/678">#678</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>Vector types of tuples and nested frozen types are stored in system_schema differently from Apache Cassandra 5.0</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/679">#679</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>Unknown table and column failures reach Apache Cassandra coordinators as UNKNOWN instead of INCOMPATIBLE_SCHEMA</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/692">#692</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>CASSANDRA_4: system_schema.tables and views store the memtable option in the CC4 map layout, which Apache Cassandra reads as an invalid configuration</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/755">#755</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>After a rolling upgrade, coordinators keep refusing features that need a newer messaging version until their idle connections reconnect</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/652">#652</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>(none)</td>
+<td>Nodes refuse SSTable versions they can read when the configured write version is older (e.g. bti da while writing cc)</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="sai-resources-metrics-options-and-documentation">SAI resources, metrics, options and documentation</h3>
+<p>Leaked iterators and file handles, cache pollution by index builds, needless work in compaction, metrics and guardrail counting, option validation, and documentation that describes the wrong defaults or operators.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Code</th>
+<th>Branches</th>
+<th>Severity</th>
+<th>Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/605">#605</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>SAI: an analyzer config without a tokenizer is rejected with &quot;CQL type text cannot be analyzed&quot;</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/267">#267</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>SAI leaks the partition iterator or the posting lists of a query that times out</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/270">#270</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>SAI rejects valid index options on JVMs whose default locale is Turkish or Azeri</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/274">#274</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>sai_sstable_indexes_per_query counts the SSTable indexes of all the expressions of a query together, so it warns about and fails queries too early</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/278">#278</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>SAI queries don't count the tombstones of the rows they read and drop, so tombstone thresholds, metrics and tracing don't apply to them</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/364">#364</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>SAI: IndexFileUtils.openBlockingInput leaks the FileHandle when it can't create the reader</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/365">#365</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>nodetool import --require-index-components leaks a reader per imported SSTable and caches its SAI descriptor</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/366">#366</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>SAI index writers log aborts without a cause, such as an interrupted compaction, at WARN</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/466">#466</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>A class named in SAI analyzer options is initialized before its type is checked</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/470">#470</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>The index hints serializer asserts fewer than 32767 indexes, which validation accepts</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/609">#609</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>SAI: no n-gram client warning when the n-gram tokenizer or filter is named &quot;nGram&quot;</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/362">#362</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>(none)</td>
+<td>Compaction reads every fully expired SSTable in full on tables with an SAI index (or NoopIndex)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/367">#367</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>(none)</td>
+<td>conf/cassandra.yaml and NEWS.txt say sai_options.prioritize_over_legacy_index defaults to false, but it defaults to true</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/450">#450</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>(none)</td>
+<td>Cache RowFilter#hasStaticExpression, which copies the filter's expressions on each call</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/459">#459</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>(none)</td>
+<td>SAI index builds, verify, import and filter rebuilds fill the chunk cache with the sstable they read</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/460">#460</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>(none)</td>
+<td>SAI index builds still fill the chunk cache and the key cache through a per-key position lookup</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/461">#461</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>(none)</td>
+<td>SecondaryIndexManager builds the indexers of every write to an indexed table with a stream</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/462">#462</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>(none)</td>
+<td>The SAI README describes DSE's SAI: &quot;for DSE&quot;, a proprietary trie, RLAC, only token ordering</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/463">#463</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>(none)</td>
+<td>The SAI documentation lists only =, ranges, CONTAINS and AND as supported operators, and LIKE as not supported</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="trie-memtable-and-byte-comparable-values">Trie memtable and byte-comparable values</h3>
+<p>DataStax trie memtables: writes during schema changes, deletions with equal timestamps, flushes that skip or drop data, size accounting, LWT stats, and decimal values whose scale changes through the byte-comparable encoding.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Code</th>
+<th>Branches</th>
+<th>Severity</th>
+<th>Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/112">#112</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>blocker</td>
+<td>Trie memtable stores a write in flight during a schema change under the wrong columns</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/114">#114</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>blocker</td>
+<td>Trie memtable rejects a write to a column that is being added</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/215">#215</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>blocker</td>
+<td>TrieMemtableStage3: after a partition deletion, flush can skip the partition, so deleted rows come back and a row written with the deletion is lost</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/25">#25</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>critical</td>
+<td>LWTs can lose updates on tables with trie memtables: withUpdatedTimestamps keeps the old stats</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/217">#217</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>critical</td>
+<td>Trie memtable with an index: a deletion that overlaps an existing deletion fails the write, and commit log replay of it stops the node</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/218">#218</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>A write that a trie memtable fails to apply still reaches the indexes, so SAI and legacy indexes miss live rows</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/220">#220</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>critical</td>
+<td>SAI keeps the old values of a row that a range or partition deletion removed from a trie memtable, so a row written again is found by its old text ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/686">#686</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>Trie memtables change the scale of decimal clustering keys, set elements and map keys (and other values with equal byte-comparable forms)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/214">#214</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>high</td>
+<td>Trie memtable: a paged query that resumes after the last selected row of a partition fails with ReadFailure (&quot;... is not a subset of ...&quot;)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/216">#216</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>high</td>
+<td>Trie memtable: a write that fails while it is merged can leave the partition counters at zero, and flush then drops the partition's live rows</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/219">#219</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>Trie memtable live data size goes negative after some deletion sequences, and SAI queries then fail with &quot;matchingKeyCount must not be negative&quot;</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/35">#35</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>medium</td>
+<td>TrieMemtable's row count estimate is biased low, which skews SAI query planning and the EstimatedRowCount metric</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/36">#36</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>medium</td>
+<td>A write carrying a cell of a dropped column fails on tables with a trie memtable: Column c not present in row columns set</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/228">#228</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>Trie memtable returns a frozen list or set map key with a null element in place of an empty one; SAI ENTRIES index compaction and rebuild then fail ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/593">#593</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>trie_stage2 memtable: a row marker or row deletion added to an existing row is not counted on-heap</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/619">#619</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>low</td>
+<td>DecimalType byte-comparable decoding turns a decimal with a scale of Integer.MAX_VALUE into one with a scale of Integer.MIN_VALUE</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/621">#621</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>Trie memtables return and flush wrong decimal clustering keys, set elements and map keys for a scale of Integer.MAX_VALUE</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="compaction-sstables-and-tools">Compaction, SSTables and tools</h3>
+<p>Compaction and scrub with dropped columns, cursor compaction, expired TTL row markers, snapshot names, tombstone compaction selection, incremental repair finalization, and the sstable tools on legacy SSTables.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Code</th>
+<th>Branches</th>
+<th>Severity</th>
+<th>Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/2">#2</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>blocker</td>
+<td>Compaction output header can give a column an earlier type than its data, and scrub then removes the rows</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/824">#824</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>blocker</td>
+<td>Cursor compaction of a static row and a range deletion from the partition start in different sstables fails on 5.0 and writes a corrupt sstable on 4.0</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/130">#130</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>critical</td>
+<td>A row kept alive by cells older than its expired TTL row marker is missing from selections that don't read those cells</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/232">#232</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>A row kept alive by cells older than its expired TTL row marker is missing from selections that don't read those cells</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/695">#695</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>Parallel major compactions with snapshot_before_compaction fail: their tasks pick the same snapshot name</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/728">#728</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>high</td>
+<td>snapshot_before_compaction: compactions of a table that start in the same millisecond take the same snapshot name and fail</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/37">#37</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>sstabledump fails with CorruptSSTableException on legacy sstables whose header records a frozen tuple without a frozen wrapper</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/58">#58</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>TRUNCATE during upgradesstables can wait for the whole upgrade instead of interrupting it</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/116">#116</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>medium</td>
+<td>Single-sstable tombstone compaction never chooses an sstable that overlaps another (inverted estimate check)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/579">#579</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>Incremental repair finalization can demote just-repaired sstables or drop sstables from a new session</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/43">#43</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>Every offline open of a BIG sstable by a standalone tool warns about a pass-through bloom filter</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/84">#84</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>garbagecollect and sstable splitting fail with a NullPointerException instead of &quot;Not enough space for compaction&quot;</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/120">#120</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>low</td>
+<td>sstabledump, sstablemetadata and sstablepartitions fail with EOFException on 3.x sstables whose header does not mark frozen user type columns as ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/122">#122</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>sstabledump, sstablemetadata -s and sstablepartitions fail on legacy 3.0-written sstables with frozen user types</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/750">#750</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>Cache invalidation of an sstable file removed after its exists() check logs NoSuchFileException at ERROR</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/441">#441</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>(none)</td>
+<td>Compaction reads compressed sstables one chunk per read: the compressed read-ahead buffer is never used</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="cluster-metadata-tcm-and-upgrades-to-60">Cluster metadata (TCM) and upgrades to 6.0</h3>
+<p>Cassandra 6.0 cluster metadata: snapshots that lose table parameters, schema statements replayed from the metadata log with other guardrail results, CMS initialization during an upgrade, hints and Accord migration.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Code</th>
+<th>Branches</th>
+<th>Severity</th>
+<th>Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/666">#666</a></td>
+<td>Apache</td>
+<td>6.0, trunk</td>
+<td>high</td>
+<td>A new node started during an upgrade before CMS initialization can initialize the CMS with its empty metadata, unregistering the upgraded nodes and ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/729">#729</a></td>
+<td>Apache</td>
+<td>6.0, trunk</td>
+<td>high</td>
+<td>Commit log replay fails for writes to a table that has started migrating to Accord since they were written, and the node doesn't start</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/654">#654</a></td>
+<td>Apache</td>
+<td>6.0, trunk</td>
+<td>medium</td>
+<td>Cluster metadata snapshots don't keep a table's auto_repair settings: TableParams.Serializer omits them</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/655">#655</a></td>
+<td>Apache</td>
+<td>6.0, trunk</td>
+<td>medium</td>
+<td>CREATE TABLE ... WITH auto_repair loses the setting when the coordinator has auto-repair scheduling disabled: the expanded CQL leaves it out</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/656">#656</a></td>
+<td>Apache</td>
+<td>6.0, trunk</td>
+<td>medium</td>
+<td>A node can't load a cluster metadata snapshot with a table whose memtable configuration its cassandra.yaml doesn't define: TableParams.Serializer ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/658">#658</a></td>
+<td>Apache</td>
+<td>6.0, trunk</td>
+<td>medium</td>
+<td>ALTER TABLE applies an option removed by table_properties_ignored on nodes that replay it from the metadata log</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/667">#667</a></td>
+<td>Apache</td>
+<td>6.0, trunk</td>
+<td>medium</td>
+<td>Before CMS initialization, upgraded nodes address hints with node ids, so a node still on 5.0 stores them instead of applying them</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/720">#720</a></td>
+<td>Apache</td>
+<td>6.0, trunk</td>
+<td>medium</td>
+<td>Hints rejected for the other transaction system are lost: a second rejection counts as delivered, and the retry picks hints by index</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/722">#722</a></td>
+<td>Apache</td>
+<td>6.0, trunk</td>
+<td>medium</td>
+<td>A hint at messaging version 14 for a dropped table fails on every delivery with CoordinatorBehindException, so hint delivery to that node stops ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/724">#724</a></td>
+<td>Apache</td>
+<td>6.0, trunk</td>
+<td>medium</td>
+<td>ALTER MATERIALIZED VIEW runs the table_properties guardrail again on replay from the metadata log, with the replaying node's settings</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/776">#776</a></td>
+<td>Apache</td>
+<td>6.0, trunk</td>
+<td>medium</td>
+<td>ALTER KEYSPACE applies an option removed by keyspace_properties_ignored on nodes that replay it from the metadata log</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/777">#777</a></td>
+<td>Apache</td>
+<td>6.0, trunk</td>
+<td>medium</td>
+<td>CREATE TABLE ... LIKE applies an option removed by table_properties_ignored on nodes that replay it from the metadata log</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/778">#778</a></td>
+<td>Apache</td>
+<td>6.0, trunk</td>
+<td>medium</td>
+<td>A node that was down while every CMS member it knows left can't fetch the metadata log or commit: RemoteProcessor only contacts the stored CMS members</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/657">#657</a></td>
+<td>Apache</td>
+<td>6.0, trunk</td>
+<td>low</td>
+<td>Directory fails with &quot;Unsupported metadata version&quot; when every node that hasn't left has a later metadata version</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/779">#779</a></td>
+<td>Apache</td>
+<td>6.0, trunk</td>
+<td>low</td>
+<td>A bootstrapping node serves top-k reads and reads with transaction conflicts allowed: the replica-side ownership check skips them</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="only_purge_repaired_tombstones">only_purge_repaired_tombstones</h3>
+<p>Tables with <code>only_purge_repaired_tombstones</code>: reads, row cache hits, index searches and the repaired data digest that purge unrepaired tombstones or expired cells, and legacy index tables that never purge.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Code</th>
+<th>Branches</th>
+<th>Severity</th>
+<th>Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/448">#448</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>high</td>
+<td>Row cache hits and index searches purge unrepaired tombstones on tables with only_purge_repaired_tombstones</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/449">#449</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>Row cache hits and index searches purge unrepaired tombstones on tables with only_purge_repaired_tombstones</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/523">#523</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>high</td>
+<td>Reads purge expired cells of unrepaired data on tables with only_purge_repaired_tombstones</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/524">#524</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>Reads purge expired cells of unrepaired data on tables with only_purge_repaired_tombstones</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/525">#525</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>high</td>
+<td>Range reads purge deletions written into the memtable after they opened it on tables with only_purge_repaired_tombstones</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/526">#526</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>Range reads purge deletions written into the memtable after they opened it on tables with only_purge_repaired_tombstones</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/543">#543</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>medium</td>
+<td>Legacy secondary index tables never purge tombstones when the base table has only_purge_repaired_tombstones</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/544">#544</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>Legacy secondary index tables never purge tombstones when the base table has only_purge_repaired_tombstones</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/443">#443</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>low</td>
+<td>Memtables report the 2015 encoding epoch as their min local deletion time, so reads with only_purge_repaired_tombstones purge no tombstones</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/444">#444</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>Memtable data reports the 2015 encoding epoch as its min local deletion time, so reads with only_purge_repaired_tombstones purge no tombstones</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/549">#549</a></td>
+<td>Apache</td>
+<td>(none)</td>
+<td>low</td>
+<td>Repaired data digest of a read of a table with only_purge_repaired_tombstones can purge a tombstone the response keeps</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/550">#550</a></td>
+<td>DataStax</td>
+<td>(none)</td>
+<td>low</td>
+<td>Repaired data digest of a read of a table with only_purge_repaired_tombstones can purge a tombstone the response keeps</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="schema-changes-dropped-columns-and-user-types">Schema changes, dropped columns and user types</h3>
+<p>Cells of dropped columns newer than the drop, column renames, vector columns of user types, schema agreement and table option guardrails.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Code</th>
+<th>Branches</th>
+<th>Severity</th>
+<th>Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/27">#27</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>critical</td>
+<td>Schema changes are acknowledged before system.local has the new schema version, so drivers see schema agreement too early</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/710">#710</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>critical</td>
+<td>Vector columns of user types: dropping one stores a type no node can load, DROP TYPE and ALTER TYPE ignore them</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/680">#680</a></td>
+<td>DataStax</td>
+<td>main-4.0</td>
+<td>high</td>
+<td>main-4.0: dropping a vector&lt;frozen<udt>&gt; column, or its UDT, leaves a schema that can't be loaded</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/1">#1</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>medium</td>
+<td>NullPointerException in Row.Merger when a dropped complex column has cells newer than the drop</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/3">#3</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>medium</td>
+<td>Partition and range reads fail with ReadFailure when a dropped column has cells newer than the drop</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/4">#4</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>medium</td>
+<td>Renaming a primary key column to the name of a dropped column makes sstables fail to open</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/125">#125</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>NullPointerException in Row.Merger when a dropped complex column has cells newer than the drop</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/640">#640</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>Partition and range reads fail with ReadFailure when a dropped column has cells newer than the drop</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/659">#659</a></td>
+<td>Apache</td>
+<td>4.1, 5.0, 6.0, trunk</td>
+<td>medium</td>
+<td>CREATE TABLE and ALTER TABLE with an option in table_properties_ignored and another option fail with ConcurrentModificationException</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/711">#711</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>medium</td>
+<td>ALTER TYPE of a user type used in a vector column fails with &quot;Column mismatch&quot;</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/100">#100</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>Dropped columns with cells newer than the drop: scrub removes rows and cursor compaction fails</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="legacy-secondary-indexes">Legacy secondary indexes</h3>
+<p>Legacy (table-based) secondary indexes on static columns, with TTL changes, <code>DROP INDEX</code> during use, and index implementation selection.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Code</th>
+<th>Branches</th>
+<th>Severity</th>
+<th>Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/163">#163</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>critical</td>
+<td>Legacy index on a static column misses rows in single-partition queries with a clustering restriction or paging</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/427">#427</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>Legacy index on a static column misses rows in single-partition queries with a clustering restriction or paging</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/663">#663</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>critical</td>
+<td>Legacy secondary index loses a row when a replica receives the same value with the same timestamp and a new TTL</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/363">#363</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>medium</td>
+<td>UCS drops fully expired SSTables without notifying secondary indexes about their rows</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/423">#423</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>medium</td>
+<td>A write whose index fails in Indexer#finish leaves a skip-list memtable that fails to flush (&quot;[c] is not a subset of [...]&quot;)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/424">#424</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>A write whose index fails in Indexer#finish leaves a memtable that fails to flush (&quot;[c] is not a subset of [...]&quot;) or flushes the row without its ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/592">#592</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>CREATE CUSTOM INDEX and the Encryptor key_provider option initialize the named class before checking its type</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/708">#708</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>medium</td>
+<td>CREATE INDEX ... USING 'legacy_local_table' creates an index of cassandra.default_index_implementation_class</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="auto-repair">Auto-repair</h3>
+<p>Auto-repair parameters accepted but ignored, priority hosts, host ids after an upgrade to 6.0, and history rows of removed nodes.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Code</th>
+<th>Branches</th>
+<th>Severity</th>
+<th>Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/590">#590</a></td>
+<td>Apache</td>
+<td>5.0</td>
+<td>medium</td>
+<td>AutoRepair: an unknown priority host is stored as an empty host id and stops auto-repair of that type</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/697">#697</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>medium</td>
+<td>auto_repair keys that aren't lower case are accepted and ignored: AutoRepairParams keeps the given case next to the defaults</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/856">#856</a></td>
+<td>Apache</td>
+<td>6.0, trunk</td>
+<td>medium</td>
+<td>Auto-repair uses pre-upgrade host ids after an upgrade to 6.0: priority hosts are lost and upgraded nodes fail the replica check</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/859">#859</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>medium</td>
+<td>Auto-repair stops when the history row of a removed node is the oldest and one or two nodes are left: its deletion vote can't pass</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/706">#706</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>low</td>
+<td>auto_repair priority outside the int range is accepted and then fails auto-repair planning</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/858">#858</a></td>
+<td>Apache</td>
+<td>6.0, trunk</td>
+<td>low</td>
+<td>Auto-repair host id migration on upgrade to 6.0 drops a pending forced repair and deletes rows whose copy failed</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="client-protocol-and-buffers">Client protocol and buffers</h3>
+<p>Native protocol STARTUP handling, queue timeout responses, client metrics and the buffer pool allocator.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Code</th>
+<th>Branches</th>
+<th>Severity</th>
+<th>Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/554">#554</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>high</td>
+<td>BufferPoolAllocator.Wrapped keeps a view without a cleaner after a resize into overflow memory, so release frees nothing or throws</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/455">#455</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>medium</td>
+<td>Native transport queue timeout response is sent on stream 0</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/555">#555</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>BufferPoolAllocator.Wrapped keeps a view without a cleaner after a resize into overflow memory, so release doesn't free it</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/456">#456</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>CNDB-11070 backport repeats CASSANDRA-19534 checks; Client.Queued counts each request twice</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/831">#831</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>low</td>
+<td>A rejected protocol V5 STARTUP leaks a reference to the client address's allocator, and a failed STARTUP response write leaks its bytes</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/834">#834</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>A V5 STARTUP that is rejected, or whose response can't be written, keeps the client address's allocator reference and the STARTUP's in-flight bytes</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="hints">Hints</h3>
+<p>Hints for tables a node doesn't know or has dropped, and hints during decommission.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Code</th>
+<th>Branches</th>
+<th>Severity</th>
+<th>Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/67">#67</a></td>
+<td>DataStax</td>
+<td>main-4.0</td>
+<td>high</td>
+<td>Decommission fails with &quot;Failed to transfer all hints&quot; when the node holds hints for a down node</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/721">#721</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>medium</td>
+<td>A node that doesn't know a hint's table yet acknowledges the hint, and the sender deletes it</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/731">#731</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>A node that doesn't know a hint's table yet acknowledges the hint, and the sender deletes it</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/723">#723</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>low</td>
+<td>A hint for several tables loses all of its updates when one of the tables has been dropped</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="commit-log-and-durability">Commit log and durability</h3>
+<p>Direct I/O commit log flushes on ZFS and writes lost when a table changes its memtable configuration.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Code</th>
+<th>Branches</th>
+<th>Severity</th>
+<th>Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/565">#565</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>high</td>
+<td>Direct I/O commit log flush fails with EIO on ZFS when mutations are written into its last block during the write</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/566">#566</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>high</td>
+<td>Direct I/O commit log flush fails with EIO on ZFS when mutations are written into its last block during the write</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/660">#660</a></td>
+<td>Apache</td>
+<td>4.1, 5.0, 6.0, trunk</td>
+<td>low</td>
+<td>Changing a table to a memtable with durable writes lets the commit log drop writes of the old memtable before it is flushed</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/661">#661</a></td>
+<td>Apache</td>
+<td>4.1, 5.0, 6.0, trunk</td>
+<td>low</td>
+<td>A write can reach a memtable that relies on the commit log without a commit log entry when the table's memtable stops skipping the commit log</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="gossip-membership-reads-and-other">Gossip, membership, reads and other</h3>
+<p>Gossip and peer metadata, read timeouts and speculative retry, row cache, materialized views, encryption options and Paxos cleanup.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Code</th>
+<th>Branches</th>
+<th>Severity</th>
+<th>Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/59">#59</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>high</td>
+<td>Node and peer metadata bypass Nodes in gossip, Paxos and startup; removenode leaves a ghost peer on the coordinator</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/539">#539</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>high</td>
+<td>A partially cached partition whose cached rows end inside a range deletion fails the read with an illegal range tombstone bounds sequence</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/540">#540</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>high</td>
+<td>A partially cached partition whose cached rows end inside a range deletion fails the read with an illegal range tombstone bounds sequence</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/624">#624</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>Encryptor: default key provider is not a key provider factory, so compression options without key_provider always fail</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/694">#694</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>Reads wait out their timeout after a replica failure when the coordinator won't send a speculative retry</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/732">#732</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0</td>
+<td>medium</td>
+<td>A node that comes back at the same address on another storage port loses most of its system.peers row</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/733">#733</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>medium</td>
+<td>A peer that comes back at the same address on another storage port loses its system.peers row</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/753">#753</a></td>
+<td>Apache</td>
+<td>4.1, 5.0, 6.0, trunk</td>
+<td>medium</td>
+<td>Paxos v2 cleanup drops its prepare request when the local gossip state changes while the request is sent</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/5">#5</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>low</td>
+<td>Inbound handshake timeout throws NullPointerException and leaves the connection open when no handshake message was decoded</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/28">#28</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>The shutdown announcement of a replacing node that cannot reach a seed is never delivered: GOSSIP_SHUTDOWN without a GossipShutdown payload</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/614">#614</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>low</td>
+<td>A write to a table with a materialized view times out instead of failing when its retry after a view lock miss throws</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/616">#616</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>A write to a table with a materialized view times out instead of failing when its retry after a view lock miss throws</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/691">#691</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>low</td>
+<td>Range reads count each batch's rows twice when they size the next batch</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/73">#73</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>(none)</td>
+<td>NEWS.txt does not document that speculative retry timing differs from HCD 1.2</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="test-harness-build-and-ci">Test harness, build and CI</h3>
+<p>Fixes to tests and test frameworks (in-JVM dtest paging, StreamingTest hangs, flaky tests, files left behind), build targets, packaging and CI.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Code</th>
+<th>Branches</th>
+<th>Severity</th>
+<th>Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/64">#64</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>medium</td>
+<td>cqlsh tests never activate their virtualenv, and the deb/rpm packages expect the Apache Cassandra artifact names</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/41">#41</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>Unit tests fail under the latest test configuration (testclasslist-latest)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/44">#44</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>StreamingTest mixed-messaging-version tests time out waiting for schema agreement</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/45">#45</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>ColumnFamilyStoreTest can hang until the class timeout: testRWCDLocking can leave the operations lock held</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/46">#46</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>ant testclasslist-bigtable and test-bigtable fail with a NullPointerException: the testlist-bigtable macro is missing</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/47">#47</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>GeoDistanceAccuracyTest.haversineBenchmark is flaky on a loaded host</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/52">#52</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>VectorSiftSmallTest.testCompaction fails about one run in three on its recall@1 bound</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/53">#53</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>MutatorVetoTest paxos repair refresh tests fail when the replica that committed answers last</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/56">#56</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>UnifiedCompactionStrategyTest.testDropExpiredFromBucket fails when two calls land in the same millisecond</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/69">#69</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>LongBM25Test cannot run: its corpus is not in the tree (and on 5.0 it runs out of heap)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/74">#74</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>AbstractTypeTest upgrade and downgrade tests are all ignored</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/92">#92</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>simulator-dtest fails or stalls on DataStax code (ShortPaxosSimulationTest, TrivialSimulationTest, MonitorMethodTransformerTest)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/98">#98</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>ConnectionTest and ProxyHandlerConnectionsTest run into the class timeout</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/103">#103</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>DataStax microbenchmarks fail when they are run (microbench-test)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/118">#118</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>LegacySSTableTest.testVerifyOldDroppedTupleSSTables fails with BIG: dropped tuple columns re-added with other types</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/138">#138</a></td>
+<td>Apache</td>
+<td>4.1, 5.0, 6.0, trunk</td>
+<td>low</td>
+<td>AbstractCommitLogSegmentManager.stopUnsafe does not wait for the segment allocator when assertions are disabled</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/139">#139</a></td>
+<td>Apache</td>
+<td>4.1, 5.0, 6.0, trunk</td>
+<td>low</td>
+<td>In-JVM dtest executeWithPaging fails with &quot;calling without calling .init() first&quot; when a replica reports a read warning</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/140">#140</a></td>
+<td>Apache</td>
+<td>5.0, 6.0, trunk</td>
+<td>low</td>
+<td>In-JVM dtest executeWithPaging returns the columns the server adds for ordering</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/165">#165</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0</td>
+<td>low</td>
+<td>In-JVM dtest paged queries execute the first page twice</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/229">#229</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>AbstractCommitLogSegmentManager.stopUnsafe does not wait for the segment allocator when assertions are disabled</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/230">#230</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>In-JVM dtest executeWithPaging fails with &quot;calling without calling .init() first&quot; when a replica reports a read warning</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/234">#234</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>In-JVM dtest executeWithPaging returns the columns the server adds for ordering</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/235">#235</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>In-JVM dtest paged queries execute the first page twice</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/244">#244</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>RepairErrorsTest.testNoSuchRepairSessionAnticompaction fails when node 1's anticompaction of the first session completes after the repair returns</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/245">#245</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>SecondaryIndexTest.testWriteOnlyIndex fails intermittently: the rebuild after DROP INDEX can run before the table is flushed</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/268">#268</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>Building an SAI view fails with the interval tree expensive checks when SSTable indexes share a term: RangeTermTree.Term has no equals</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/428">#428</a></td>
+<td>DataStax</td>
+<td>main-5.0</td>
+<td>low</td>
+<td>SecondaryIndexTest queries new indexes before they are queryable and fails with IndexBuildInProgressException</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/464">#464</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>QueryMetricsTest#testQueryKindMetrics fails at SAI versions ED and GA: expected 936 cells returned, but was 1248</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/569">#569</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>low</td>
+<td>AuditLogViewerTest leaves AuditLogViewer JVMs running after the test</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/570">#570</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>AuditLogViewerTest leaves AuditLogViewer JVMs running after the test</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/574">#574</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>low</td>
+<td>Tests leave files in the checkout root</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/575">#575</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>Tests leave files in the checkout root</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/805">#805</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>In-JVM dtest instances stay reachable after their cluster closes, so the heap of classes that start many clusters fills up</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/818">#818</a></td>
+<td>DataStax</td>
+<td>main-4.0, main-5.0</td>
+<td>low</td>
+<td>StreamingTest hangs until the class timeout when a stream fails</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/821">#821</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>low</td>
+<td>StreamingTest hangs until the class timeout when a stream fails</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/157">#157</a></td>
+<td>Apache</td>
+<td>4.0, 4.1, 5.0, 6.0, trunk</td>
+<td>(none)</td>
+<td>In-JVM dtests can't read the client warnings of a paged query</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="apache-and-datastax-pairs">Apache and DataStax pairs</h2>
+<p>These issues describe the same bug on the two code bases, with a fix for each. They are expected, not duplicates.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Apache</th>
+<th>DataStax</th>
+<th>Apache title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/1">#1</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/125">#125</a></td>
+<td>NullPointerException in Row.Merger when a dropped complex column has cells newer than the drop</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/3">#3</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/640">#640</a></td>
+<td>Partition and range reads fail with ReadFailure when a dropped column has cells newer than the drop</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/8">#8</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/171">#171</a></td>
+<td>Function calls with a list or map literal of another type, like count([v1, v2]), fail with a server error</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/10">#10</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/272">#272</a></td>
+<td>GROUP BY with a limit or paging fails with &quot;open RT bound as its last item&quot;, or counts deleted rows, when ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/120">#120</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/122">#122</a></td>
+<td>sstabledump, sstablemetadata and sstablepartitions fail with EOFException on 3.x sstables whose header does ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/129">#129</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/243">#243</a></td>
+<td>Replica filtering protection returns deleted rows for filters on static columns when replicas diverge</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/130">#130</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/232">#232</a></td>
+<td>A row kept alive by cells older than its expired TTL row marker is missing from selections that don't read ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/131">#131</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/236">#236</a></td>
+<td>Filtering on a collection matches deleted and expired elements and entries</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/132">#132</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/238">#238</a></td>
+<td>PER PARTITION LIMIT returns too many rows when replica filtering protection splits a single-partition read</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/134">#134</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/368">#368</a></td>
+<td>SAI index created while a stream is received silently misses the rows of the streamed SSTables</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/135">#135</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/237">#237</a></td>
+<td>GROUP BY queries with a limit or paging lose groups and static rows when short read protection reaches a ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/136">#136</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/182">#182</a></td>
+<td>IN with a null element before other elements matches nothing in filtered queries</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/137">#137</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/222">#222</a></td>
+<td>Concurrent writes of one row can leave the SAI vector memtable index with a wrong, missing or extra vector ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/138">#138</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/229">#229</a></td>
+<td>AbstractCommitLogSegmentManager.stopUnsafe does not wait for the segment allocator when assertions are ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/139">#139</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/230">#230</a></td>
+<td>In-JVM dtest executeWithPaging fails with &quot;calling without calling .init() first&quot; when a replica reports a ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/140">#140</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/234">#234</a></td>
+<td>In-JVM dtest executeWithPaging returns the columns the server adds for ordering</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/150">#150</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/233">#233</a></td>
+<td>NullPointerException in multi-column relations with a tuple bound to null</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/161">#161</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/368">#368</a></td>
+<td>An SAI index created just before streamed or imported SSTables are added misses their rows, and a failed ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/163">#163</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/427">#427</a></td>
+<td>Legacy index on a static column misses rows in single-partition queries with a clustering restriction or ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/165">#165</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/235">#235</a></td>
+<td>In-JVM dtest paged queries execute the first page twice</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/167">#167</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/231">#231</a></td>
+<td>Replica filtering protection makes needless short read protection requests: range reads ask each replica for ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/169">#169</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/171">#171</a></td>
+<td>Function calls with a list literal argument are rejected with &quot;Unexpected receiver type&quot; when an overload of ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/174">#174</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/368">#368</a></td>
+<td>An SAI index created while the node is starting misses the rows of SSTables that a stream or an import is ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/192">#192</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/643">#643</a></td>
+<td>List and set literals in the selection get the type of their first element even when a later element's type ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/240">#240</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/241">#241</a></td>
+<td>Filtering without an index misses a row whose match needs one replica's static row and another replica's row</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/423">#423</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/424">#424</a></td>
+<td>A write whose index fails in Indexer#finish leaves a skip-list memtable that fails to flush (&quot;[c] is not a ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/443">#443</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/444">#444</a></td>
+<td>Memtables report the 2015 encoding epoch as their min local deletion time, so reads with ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/448">#448</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/449">#449</a></td>
+<td>Row cache hits and index searches purge unrepaired tombstones on tables with only_purge_repaired_tombstones</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/495">#495</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/479">#479</a></td>
+<td>After a TRUNCATE without a flush, a write racing it can leave the truncated memtable's SAI index live, and ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/503">#503</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/504">#504</a></td>
+<td>SAI orders and compares inet values as IPv6, so range and equality queries return other rows than filtering ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/507">#507</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/508">#508</a></td>
+<td>The empty literal {} for a descending frozen map clustering column fails with ClassCastException</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/513">#513</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/514">#514</a></td>
+<td>SAI: a replica whose index of the same name was recreated with other options answers reads with its own ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/515">#515</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/516">#516</a></td>
+<td>SAI: a replica that doesn't know a non-tokenizing index answers = and CONTAINS reads without its options and ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/523">#523</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/524">#524</a></td>
+<td>Reads purge expired cells of unrepaired data on tables with only_purge_repaired_tombstones</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/525">#525</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/526">#526</a></td>
+<td>Range reads purge deletions written into the memtable after they opened it on tables with ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/527">#527</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/528">#528</a></td>
+<td>Secondary indexes: a node that gets an index dropped and created again with other options in one schema ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/534">#534</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/372">#372</a></td>
+<td>Secondary indexes: the build of a dropped index changes the build state of a new index of the same name</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/538">#538</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/369">#369</a></td>
+<td>SAI: a new index uses the files of a dropped index of the same name while a query holds them</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/539">#539</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/540">#540</a></td>
+<td>A partially cached partition whose cached rows end inside a range deletion fails the read with an illegal ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/541">#541</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/542">#542</a></td>
+<td>SAI returns a wide partition without a partition deletion written during the search, with the deletion ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/543">#543</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/544">#544</a></td>
+<td>Legacy secondary index tables never purge tombstones when the base table has only_purge_repaired_tombstones</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/549">#549</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/550">#550</a></td>
+<td>Repaired data digest of a read of a table with only_purge_repaired_tombstones can purge a tombstone the ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/554">#554</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/555">#555</a></td>
+<td>BufferPoolAllocator.Wrapped keeps a view without a cleaner after a resize into overflow memory, so release ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/565">#565</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/566">#566</a></td>
+<td>Direct I/O commit log flush fails with EIO on ZFS when mutations are written into its last block during the ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/569">#569</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/570">#570</a></td>
+<td>AuditLogViewerTest leaves AuditLogViewer JVMs running after the test</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/574">#574</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/575">#575</a></td>
+<td>Tests leave files in the checkout root</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/585">#585</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/586">#586</a></td>
+<td>SAI: TRUNCATE makes an index queryable that misses an SSTable the truncate kept</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/614">#614</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/616">#616</a></td>
+<td>A write to a table with a materialized view times out instead of failing when its retry after a view lock ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/619">#619</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/621">#621</a></td>
+<td>DecimalType byte-comparable decoding turns a decimal with a scale of Integer.MAX_VALUE into one with a scale ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/710">#710</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/711">#711</a></td>
+<td>Vector columns of user types: dropping one stores a type no node can load, DROP TYPE and ALTER TYPE ignore ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/721">#721</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/731">#731</a></td>
+<td>A node that doesn't know a hint's table yet acknowledges the hint, and the sender deletes it</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/725">#725</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/758">#758</a></td>
+<td>SAI: the restrictions left to filtering on a column with an analyzed index (!=, IN, NOT IN, NOT CONTAINS, ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/726">#726</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/696">#696</a></td>
+<td>SAI filtering of an unindexed map entry fails the read when a row holds an entry whose key or value is over ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/728">#728</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/695">#695</a></td>
+<td>snapshot_before_compaction: compactions of a table that start in the same millisecond take the same snapshot ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/730">#730</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/739">#739</a></td>
+<td>During an upgrade from 5.0, 6.0 coordinators send SAI reads with != or non-strict IN that 5.0 replicas ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/732">#732</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/733">#733</a></td>
+<td>A node that comes back at the same address on another storage port loses most of its system.peers row</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/785">#785</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/249">#249</a></td>
+<td>SAI term size failure threshold isn't applied when the warning threshold is disabled, or when the analyzer ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/797">#797</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/249">#249</a></td>
+<td>SAI term size guardrail isn't applied to a partition key component written by a static-only insert: the ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/798">#798</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/249">#249</a></td>
+<td>SAI sstable index writer checks the size of an analyzed value instead of its terms: compaction and index ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/821">#821</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/818">#818</a></td>
+<td>StreamingTest hangs until the class timeout when a stream fails</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/829">#829</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/843">#843</a></td>
+<td>A set or map nested in a bound collection value is stored unsorted and with duplicates</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/840">#840</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/841">#841</a></td>
+<td>A set or map returned by a Java user-defined function or aggregate is not sorted, and is used unsorted in ...</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/842">#842</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/843">#843</a></td>
+<td>A set or map in a bound value for a descending clustering column, a tuple, a UDT or a vector is stored ...</td>
+</tr>
+</tbody>
+</table></div>
+<p>63 Apache issues have a DataStax counterpart. <a href="https://github.com/JeremiahDJordan/cassandra/issues/827">#827</a> is one issue with both labels and PRs for both code bases.</p>
+<h2 id="duplicates">Duplicates</h2>
+<p>Same root cause and same fix within one code base. Proposal only: nothing was closed as a duplicate.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Duplicate</th>
+<th>Keep</th>
+<th>Code</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/169">#169</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/8">#8</a></td>
+<td>Apache</td>
+<td>Same cause (a list literal checked against a type that is neither a list nor a vector); #169 says so, and one PR, #18, fixes both.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/174">#174</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/161">#161</a></td>
+<td>Apache</td>
+<td>The startup path of the same per-table lock; without the fix for #161 it is part of #161. One PR, #162, fixes both.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/724">#724</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/658">#658</a></td>
+<td>Apache</td>
+<td>The same mechanism (the guardrail runs in <code>validate</code>, which a node replaying the metadata log doesn't run) for <code>ALTER MATERIALIZED VIEW</code>; one PR, #770, fixes both.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/857">#857</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/844">#844</a></td>
+<td>Apache</td>
+<td>Both come from literal assignment tests that don't unwrap <code>ReversedType</code>; one PR, #855, fixes both.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/786">#786</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/249">#249</a></td>
+<td>DataStax</td>
+<td>The analyzed-term case of the term size guardrail; #337, the PR for #249, was amended to fix it.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/635">#635</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/586">#586</a></td>
+<td>DataStax</td>
+<td>Its restart case is #360 (fixed by #397 and #413) and its truncate case is #586 (fixed by #588 and #589, which already list #635); what is left is the race filed as #636.</td>
+</tr>
+</tbody>
+</table></div>
+<p>No two open issues share a title within one code base; the duplicates above share a fix.</p>
+<h2 id="merge-proposals">Merge proposals</h2>
+<p>Closely related issues whose fixes would naturally be one patch and one review. Fewer issues mean fewer CI runs and reviews; unrelated fixes that only touch the same file are not proposed. Proposals only: no issue or PR was merged.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Keep</th>
+<th>Merge into it</th>
+<th>Code</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/134">#134</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/161">#161</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/174">#174</a></td>
+<td>Apache</td>
+<td>SAI indexes created while streamed or imported SSTables are added: the fixes are stacked (#146, then #162) on the same receiver, importer and index build code. The DataStax counterpart is already one issue (#368).</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/742">#742</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/744">#744</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/775">#775</a></td>
+<td>Apache</td>
+<td>Vector search with another restriction that is applied after the top-k (<code>IN</code> on 5.0, <code>IN</code> and negations on 6.0/trunk). One upstream ticket with a patch per branch.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/746">#746</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/759">#759</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/787">#787</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/788">#788</a></td>
+<td>Apache</td>
+<td>Vector search on tables with static columns (static vector ordering, restrictions on indexed static columns, static-only partitions); #746 and #759 change the same <code>QueryController</code> code.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/785">#785</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/797">#797</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/798">#798</a></td>
+<td>Apache</td>
+<td>The SAI term size guardrail: thresholds, static-only partition key writes and the SSTable writer checking the analyzed value instead of its terms. One review of the guardrail.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/658">#658</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/724">#724</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/776">#776</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/777">#777</a></td>
+<td>Apache</td>
+<td>Statements replayed from the metadata log skip the table and keyspace properties guardrails; same mechanism for <code>ALTER TABLE</code>, <code>ALTER MATERIALIZED VIEW</code>, <code>ALTER KEYSPACE</code> and <code>CREATE TABLE ... LIKE</code>.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/654">#654</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/656">#656</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/655">#655</a></td>
+<td>Apache</td>
+<td><code>TableParams</code> in cluster metadata: the snapshot serializer omits <code>auto_repair</code> and fails on unknown memtable configurations, and the expanded CQL drops <code>auto_repair</code>.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/660">#660</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/661">#661</a></td>
+<td>Apache</td>
+<td>Both are writes lost when a table changes its memtable configuration, in the same <code>ColumnFamilyStore#reload</code> / commit log path.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/721">#721</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/723">#723</a></td>
+<td>Apache</td>
+<td>Hints for a table the receiving node doesn't know or has dropped, in the same hint verb handler.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/856">#856</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/858">#858</a></td>
+<td>Apache</td>
+<td>Auto-repair host id migration on upgrade to 6.0.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/697">#697</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/706">#706</a></td>
+<td>Apache</td>
+<td>Validation of the <code>auto_repair</code> table parameters (<code>AutoRepairParams</code>).</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/448">#448</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/523">#523</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/525">#525</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/549">#549</a></td>
+<td>Apache</td>
+<td>Reads of tables with <code>only_purge_repaired_tombstones</code> that purge unrepaired data. #549 exists only with the fix for #525, and #448 and #525 change the same read path (<code>PurgeFunction</code>, <code>ReadCommand</code>).</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/21">#21</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/7">#7</a></td>
+<td>Apache</td>
+<td>Null elements of collection literals in the selection (NullPointerException in the selector and in <code>to_json</code>).</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/22">#22</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/192">#192</a></td>
+<td>Apache</td>
+<td>Element types of collection literals in the selection; both change <code>Selectable</code> and #192 builds on the fix for #22.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/136">#136</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/159">#159</a></td>
+<td>Apache</td>
+<td><code>IN</code> restrictions with null or unset elements in filtered queries.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/842">#842</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/829">#829</a></td>
+<td>Apache</td>
+<td>Sets and maps inside bound values stored unsorted and with duplicates (nested in collections on 6.0/trunk; in descending columns, tuples, UDTs and vectors on all branches).</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/827">#827</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/837">#837</a></td>
+<td>Apache</td>
+<td>A zero-length element of a bound value treated as null.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/840">#840</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/853">#853</a></td>
+<td>Apache</td>
+<td>Collections returned by user-defined functions.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/527">#527</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/534">#534</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/538">#538</a></td>
+<td>Apache</td>
+<td>An index dropped and created again under the same name (<code>SecondaryIndexManager</code> state and SAI files kept by name).</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/112">#112</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/36">#36</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/114">#114</a></td>
+<td>DataStax</td>
+<td>Trie memtable writes during <code>ALTER TABLE ... ADD/DROP</code>; the PRs are stacked on each other (#642, #39, #115).</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/686">#686</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/621">#621</a></td>
+<td>DataStax</td>
+<td>Decimal values whose scale changes through the trie memtable's byte-comparable encoding.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/221">#221</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/222">#222</a></td>
+<td>DataStax</td>
+<td>Concurrent writes of one row on a skip-list memtable: the same retry loop and index transaction drop or corrupt the row in the SAI memtable index (regular and vector).</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/227">#227</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/225">#225</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/226">#226</a></td>
+<td>DataStax</td>
+<td>The SAI memtable index update path (old and new values of an updated row).</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/239">#239</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/242">#242</a></td>
+<td>DataStax</td>
+<td>Strict filtering in SAI (CASSANDRA-19018 and CASSANDRA-20189); neither has a PR, and #242 follows #239.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/246">#246</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/247">#247</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/594">#594</a></td>
+<td>DataStax</td>
+<td>SAI on descending clustering columns.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/253">#253</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/254">#254</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/256">#256</a></td>
+<td>DataStax</td>
+<td>SAI negations missing rows; stacked PRs on the same negation planning code.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/279">#279</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/429">#429</a></td>
+<td>DataStax</td>
+<td>Analyzed <code>NOT CONTAINS</code>.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/469">#469</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/763">#763</a></td>
+<td>DataStax</td>
+<td>An analyzed match of a value the analyzer makes no terms of.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/276">#276</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/281">#281</a></td>
+<td>DataStax</td>
+<td>Partition keys that share a token in SAI.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/368">#368</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/371">#371</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/647">#647</a></td>
+<td>DataStax</td>
+<td>SAI builds of streamed and imported SSTables; #647 is filed against the fix stack of #368.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/369">#369</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/559">#559</a></td>
+<td>DataStax</td>
+<td>SAI files of an index of the same name.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/372">#372</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/613">#613</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/634">#634</a></td>
+<td>DataStax</td>
+<td><code>SecondaryIndexManager</code> build state kept by index name.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/586">#586</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/582">#582</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/583">#583</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/636">#636</a></td>
+<td>DataStax</td>
+<td>TRUNCATE and stopped builds that leave an SAI index queryable without an SSTable, or non-queryable; the PRs are stacked.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/376">#376</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/381">#381</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/382">#382</a></td>
+<td>DataStax</td>
+<td>An SSTable removed and added again during a build or <code>rebuild_index</code>.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/373">#373</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/612">#612</a></td>
+<td>DataStax</td>
+<td>SAI and early-opened compaction results.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/630">#630</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/631">#631</a></td>
+<td>DataStax</td>
+<td>Two builds of the same index on one SSTable (main-4.0).</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/649">#649</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/662">#662</a></td>
+<td>DataStax</td>
+<td>BTI SSTables and deletion times after 2038.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/665">#665</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/668">#668</a></td>
+<td>DataStax</td>
+<td>Size of the SAI index status gossip value.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/675">#675</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/692">#692</a></td>
+<td>DataStax</td>
+<td><code>CASSANDRA_4</code> mode: <code>system_schema</code> columns and layouts Apache Cassandra 4.x can't read.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/257">#257</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/689">#689</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/739">#739</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/740">#740</a></td>
+<td>DataStax</td>
+<td>DataStax coordinators sending reads that Apache Cassandra 5.0 replicas can't serve; one messaging-version gate.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/199">#199</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/200">#200</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/201">#201</a></td>
+<td>DataStax</td>
+<td><code>OR</code> of a static and a regular column; #201 references both.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/202">#202</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/203">#203</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/204">#204</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/205">#205</a></td>
+<td>DataStax</td>
+<td>SAI <code>ORDER BY</code> and ANN with static rows; the PRs are stacked.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/182">#182</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/183">#183</a></td>
+<td>DataStax</td>
+<td>Filtered <code>IN</code> with a null element.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/237">#237</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/645">#645</a></td>
+<td>DataStax</td>
+<td>#645 exists only with the fix for #237 (#295).</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/449">#449</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/524">#524</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/526">#526</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/550">#550</a></td>
+<td>DataStax</td>
+<td>As for the Apache issues: reads that purge unrepaired data; #550 exists only with the fix for #526.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/462">#462</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/463">#463</a></td>
+<td>DataStax</td>
+<td>SAI documentation.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/592">#592</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/466">#466</a></td>
+<td>DataStax</td>
+<td>Classes named in options initialized before their type is checked.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/605">#605</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/609">#609</a></td>
+<td>DataStax</td>
+<td>SAI analyzer configuration (<code>LuceneCustomAnalyzerConfig</code>).</td>
+</tr>
+</tbody>
+</table></div>
+<p>With all duplicates and merges, 388 open issues would become 308.</p>
+<h2 id="closed-in-this-triage">Closed in this triage</h2>
+<p>Each issue was fixed on every branch it is labelled for. Each got a comment naming the commit, and its PRs were closed with a comment pointing to it. No other open PR was based on these PRs except #156 on #78, closed too.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>PRs closed</th>
+<th>Branch</th>
+<th>Upstream commit</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/71">#71</a> Replica sensors are not tracked for SAI range reads with endpoint grouping (CNDB-19694 ...</td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/pull/76">#76</a></td>
+<td><code>main-5.0</code></td>
+<td><a href="https://github.com/datastax/cassandra/commit/26b505b7b11bc439f0c278195d2d1ad9ecae266f"><code>26b505b7b11</code></a> CNDB-19694 Fix sensors not tracked for SAI range reads</td>
+<td>Same change as #76 (<code>ReadRequestCallback</code>, implemented by <code>ReadCallback</code> and <code>SingleEndpointCallback</code>).</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/72">#72</a> SSTableIntervalTree latency metric from main-4.0 (HCD-468) is missing</td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/pull/78">#78</a></td>
+<td><code>main-5.0</code></td>
+<td><a href="https://github.com/datastax/cassandra/commit/2c6c2670e840ba0e37a65de1d941d52ea5b48b18"><code>2c6c2670e84</code></a> CNDB-20249: Port IntervalTree add/replace support and SSTableIntervalTree latency metric from main-4.0<br><a href="https://github.com/datastax/cassandra/commit/ccd81c61cc959e21d458e27373360cc9435a9872"><code>ccd81c61cc9</code></a> CNDB-20249: Address Sonar findings and add tests</td>
+<td><code>ViewSSTableIntervalTree</code> metrics and the <code>TableMetricsTest</code> check are on <code>datastax/main</code>.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/155">#155</a> IntervalTree add and replace from main-4.0 (HCD-468) are missing</td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/pull/156">#156</a></td>
+<td><code>main-5.0</code></td>
+<td><a href="https://github.com/datastax/cassandra/commit/2c6c2670e840ba0e37a65de1d941d52ea5b48b18"><code>2c6c2670e84</code></a> CNDB-20249: Port IntervalTree add/replace support and SSTableIntervalTree latency metric from main-4.0<br><a href="https://github.com/datastax/cassandra/commit/ccd81c61cc959e21d458e27373360cc9435a9872"><code>ccd81c61cc9</code></a> CNDB-20249: Address Sonar findings and add tests</td>
+<td><code>IntervalTree.java</code> is the same as in #156; <code>IntervalTreeSequenceTest</code> is identical.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/194">#194</a> Trie memtable: a partition deletion and a range deletion with the same timestamp fail ...</td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/pull/195">#195</a></td>
+<td><code>main-5.0</code></td>
+<td><a href="https://github.com/datastax/cassandra/commit/52acec20ef376276acc590aa31a80475f7707d8c"><code>52acec20ef3</code></a> CNDB-20251: Break ties between equal deletion times by kind in trie memtables</td>
+<td>Same tie-break in <code>TrieTombstoneMarker.combine</code>, with <code>EqualTimestampTombstoneTest</code>.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/300">#300</a> SAI memtable index fails the read for a contradictory range such as v &gt;= 5 AND v &lt; 3</td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/pull/318">#318</a></td>
+<td><code>main-4.0</code></td>
+<td><a href="https://github.com/datastax/cassandra/commit/c8456a5dcdc8bc792ab8d3790b156f3f3015ccfd"><code>c8456a5dcdc</code></a> CNDB-19679: Fix SAI assertion on empty range queries against the memtable index (#2821)</td>
+<td><code>ContradictoryRangeTest</code> from #318 fails on <code>datastax/base-4.0</code> and passes on <code>datastax/main-4.0</code>.</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="partly-fixed-upstream">Partly fixed upstream</h2>
+<p>No issue is fixed on only some of its labelled branches, so no branch label was removed.</p>
+<p><a href="https://github.com/JeremiahDJordan/cassandra/issues/131">#131</a> (filtering on a collection matches deleted elements) is fixed in part on <code>cassandra-5.0</code>, <code>cassandra-6.0</code> and <code>trunk</code> by <a href="https://github.com/apache/cassandra/commit/77a030d8c92cc6e2315af77b590eb8824bb7da0b"><code>77a030d8c92</code></a> Assorted fixes for post-filtering on collection elements and inet columns (CASSANDRA-21863): <code>RowFilter</code> now evaluates static column expressions on a purged static row when the read doesn't need reconciliation. The single-node test from <a href="https://github.com/JeremiahDJordan/cassandra/pull/143">#143</a> now passes on <code>cassandra-5.0</code> (it fails at <code>fb7f1b7aeeb</code>), but the multi-replica test still fails, so the issue stays open on every branch; a comment says so. <a href="https://github.com/JeremiahDJordan/cassandra/pull/143">#143</a> conflicts with that commit and needs a rebase.</p>
+<h2 id="checked-and-still-open">Checked and still open</h2>
+<p>The PR tests below were run on the upstream tip without the fix, because an upstream commit changed the same code. All still fail, so the bugs are still there.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>PR</th>
+<th>Run on</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/128">#128</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/pull/141">#141</a></td>
+<td><code>cassandra-5.0</code> <code>3e3892ce99a</code></td>
+<td><code>NonStrictFilteringMultiDatacenterTest</code>: 2 of 2 fail</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/129">#129</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/pull/142">#142</a></td>
+<td><code>cassandra-5.0</code> <code>3e3892ce99a</code></td>
+<td><code>ReplicaFilteringStaticDivergenceTest#testDivergentReplicas</code> fails (also at <code>fb7f1b7aeeb</code>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/133">#133</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/pull/145">#145</a></td>
+<td><code>cassandra-5.0</code> <code>3e3892ce99a</code></td>
+<td>4 paging tests of <code>StrictFilteringTest</code> fail</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/136">#136</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/pull/148">#148</a></td>
+<td><code>cassandra-5.0</code> <code>3e3892ce99a</code></td>
+<td><code>SelectSingleColumnRelationTest#testInRestrictionsWithNullElementsAndAllowFiltering</code> fails</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/150">#150</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/pull/151">#151</a></td>
+<td><code>cassandra-5.0</code> <code>3e3892ce99a</code></td>
+<td><code>SelectMultiColumnRelationTest#testWithNullTupleValues</code> fails</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/503">#503</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/pull/517">#517</a></td>
+<td><code>cassandra-5.0</code> <code>3e3892ce99a</code></td>
+<td><code>InetOrderTest</code> (5 of 5) and <code>InetAddressTypeEquivalencyTest</code> fail; CASSANDRA-21863 changed the same <code>inet</code> comparison but still compares as IPv6</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/199">#199</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/pull/383">#383</a></td>
+<td><code>datastax/main</code> <code>f7a7fc031a3</code></td>
+<td><code>StaticColumnDisjunctionTest</code> (15 of 15) and 3 <code>RowFilterTest</code> cases fail</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/207">#207</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/pull/305">#305</a></td>
+<td><code>datastax/main</code></td>
+<td><code>BM25Test#testRowDeletedAndWrittenAgain</code> fails at every version</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/226">#226</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/pull/340">#340</a></td>
+<td><code>datastax/main</code></td>
+<td><code>EmptyValueUpdateTest</code> and <code>BM25UpdateTest</code> fail (the PR is stacked on the fix for #225)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/248">#248</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/pull/334">#334</a></td>
+<td><code>datastax/main</code></td>
+<td><code>EmptyBoundsTest</code> and <code>EmptyBoundSearchTest</code> fail with the read failure the issue describes</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/275">#275</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/pull/311">#311</a>, <a href="https://github.com/JeremiahDJordan/cassandra/pull/312">#312</a></td>
+<td><code>datastax/main</code>, <code>datastax/main-4.0</code></td>
+<td><code>NotEqualsEmptyValueTest</code> fails on both; CNDB-19679 changed the same <code>TrieMemoryIndex</code> code</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/479">#479</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/pull/498">#498</a></td>
+<td><code>datastax/main</code></td>
+<td><code>TrackerTest#testMemtableReplacement</code> and <code>NativeIndexDDLTest#testTruncateWithoutFlushDuringWrite</code> fail</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/issues/257">#257</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/307">#307</a></td>
+<td><a href="https://github.com/JeremiahDJordan/cassandra/pull/348">#348</a>, <a href="https://github.com/JeremiahDJordan/cassandra/pull/321">#321</a></td>
+<td><code>datastax/main</code></td>
+<td>their tests use classes and constants the fix adds, so the fix is not there</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="unclear-cases-and-follow-ups">Unclear cases and follow-ups</h2>
+<ul>
+<li>
+<p>PRs that no longer apply to the upstream tip of their base and need a rebase: <a href="https://github.com/JeremiahDJordan/cassandra/pull/143">#143</a>, <a href="https://github.com/JeremiahDJordan/cassandra/pull/517">#517</a> (on <code>cassandra-5.0</code>, after CASSANDRA-21863 and CASSANDRA-21897); <a href="https://github.com/JeremiahDJordan/cassandra/pull/311">#311</a>, <a href="https://github.com/JeremiahDJordan/cassandra/pull/312">#312</a>, <a href="https://github.com/JeremiahDJordan/cassandra/pull/321">#321</a>, <a href="https://github.com/JeremiahDJordan/cassandra/pull/348">#348</a>, <a href="https://github.com/JeremiahDJordan/cassandra/pull/383">#383</a>, <a href="https://github.com/JeremiahDJordan/cassandra/pull/498">#498</a> (on <code>datastax/main</code>, after CNDB-19679 and CNDB-20249). Most Apache 5.0 PRs are based on <code>fb7f1b7aeeb</code>, 11 commits behind <code>cassandra-5.0</code>; apart from <code>CHANGES.txt</code> they still apply cleanly.</p>
+</li>
+<li>
+<p><a href="https://github.com/JeremiahDJordan/cassandra/issues/240">#240</a>, <a href="https://github.com/JeremiahDJordan/cassandra/issues/515">#515</a> and <a href="https://github.com/JeremiahDJordan/cassandra/issues/541">#541</a> have no PR and were filed against <code>cassandra-5.0</code> before CASSANDRA-21897 (<code>47227d98bf0</code>, SAI reconciliation with range tombstones and multi-cell collections). That commit changes <code>RowFilter#isMutableIntersection</code> and how <code>StorageAttachedIndexSearcher</code> keeps range tombstones, not the static row matching, unknown-index and partition-deletion paths these issues describe, so they are most likely still there; they were not run again.</p>
+</li>
+<li>
+<p><a href="https://github.com/JeremiahDJordan/cassandra/issues/165">#165</a> and <a href="https://github.com/JeremiahDJordan/cassandra/issues/235">#235</a> are fixed on Apache <code>trunk</code> by CASSANDRA-20089 and labelled only for the branches without it, which is correct.</p>
+</li>
+<li>
+<p><a href="https://github.com/JeremiahDJordan/cassandra/issues/613">#613</a> says the DataStax mainline merge branch is not affected; that branch is not upstream, so the issue stays open for <code>datastax/main</code> and <code>main-4.0</code>.</p>
+</li>
+<li>
+<p>CNDB-19679 on <code>datastax/main</code> (<code>8e7a2c6cccf</code>, &quot;Remove empty ranges from RowFilter&quot;) rewrites parts of <code>RowFilter</code>, <code>StatementRestrictions</code> and <code>SelectStatement</code>. The DataStax PRs that touch those files still apply, and the issues tested above still fail, but PRs that change <code>RowFilter</code> should be rebased and their tests run again before review.</p>
+</li>
+</ul>
+
+</main>
+</div>
+</body>
+</html>
