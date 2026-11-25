@@ -88,13 +88,10 @@ pre.mermaid { margin: 16px 0; padding: 16px; background: var(--surface); border:
 </nav>
 <main>
 <h1>Why this work: what DataStax main-5.0's SAI was missing</h1>
-<p>DataStax's Cassandra 5.0 line (main-5.0) has carried its own Storage-Attached Index (SAI), the one from DSE 6.8, since
-2021. Apache Cassandra fixed its SAI many times after that, but a fix reached DataStax only if someone ported it by
-hand or DataStax fixed the same problem its own way, and many reached it neither way. DataStax's SAI also had bugs
-of its own that Apache's code never had.</p>
-<p>An audit compared every Apache <code>cassandra-5.0</code> and <code>trunk</code> SAI commit with main-5.0 by behaviour, and filed every bug
-it found. A series of 107 commits restores the missing Apache fixes that apply to main-5.0 and fixes DataStax bugs in the same code. The <a href="./">review guide</a> says how to review it; the
-<a href="audit-report.html">audit report</a> has the details.</p>
+<p>An audit compared every Apache <code>cassandra-5.0</code> and <code>trunk</code> SAI commit with DataStax main-5.0 by behaviour, and filed
+every bug it found. A series of 107 commits restores the missing Apache fixes that apply to main-5.0 and fixes
+DataStax bugs in the same code. The <a href="./">review guide</a> says how to review it; the <a href="audit-report.html">audit report</a>
+has the details.</p>
 <div class="split" role="img" aria-label="The 220 Apache SAI commits: 34 restored by the series, 120 already present or equivalent, 57 not applicable, 4 documented deviations, 5 deferred">
 <span style="flex: 34" class="s1"></span><span style="flex: 120" class="s2"></span><span style="flex: 57" class="s3"></span><span style="flex: 4" class="s4"></span><span style="flex: 5" class="s5"></span>
 </div>

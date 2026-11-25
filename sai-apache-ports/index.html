@@ -81,7 +81,7 @@ pre.mermaid { margin: 16px 0; padding: 16px; background: var(--surface); border:
 <a class="home" href="../">AI review guides</a>
 <ol>
 <li><a class="s" href="#the-change-under-review">The change under review</a></li>
-<li><a class="s" href="#background-in-four-points">Background in four points</a></li>
+<li><a class="s" href="#scope">Scope</a></li>
 <li><a class="s" href="#how-to-review-a-commit">How to review a commit</a></li>
 <li><a class="s" href="#where-to-start">Where to start</a></li>
 <li><a class="s" href="#decisions-already-made">Decisions already made</a></li>
@@ -99,7 +99,7 @@ pre.mermaid { margin: 16px 0; padding: 16px; background: var(--surface); border:
 <p>This guide is for reviewers, human or AI, of the commits that bring Apache Cassandra's Storage-Attached Index (SAI)
 fixes into DataStax's Cassandra 5.0 line. The <a href="overview.html">overview</a> says on one page what main-5.0 was missing; the
 <a href="audit-report.html">audit report</a> has the full classification of every Apache SAI commit, the test evidence and the
-bugs filed along the way.</p>
+bugs filed.</p>
 <h2 id="the-change-under-review">The change under review</h2>
 <ul>
 <li><strong>Branch:</strong> <code>main-5.0-fb7f1b7aee-merge</code> (mainline in this guide): DataStax's 5.0 line (main-5.0, branch <code>main</code> of
@@ -117,13 +117,8 @@ SAI files (<a href="https://github.com/JeremiahDJordan/cassandra/commit/5e60c1c4
 numbering fix (<a href="https://github.com/JeremiahDJordan/cassandra/commit/925eff0c75dfabdbbbdd39f1c0f61b5d2f42f4f7"><code>925eff0c75d</code></a>, +4,124).</li>
 <li><strong>State:</strong> the full unit and in-JVM dtest suites pass on the published branch tip (see <a href="#evidence">Evidence</a>).</li>
 </ul>
-<h2 id="background-in-four-points">Background in four points</h2>
+<h2 id="scope">Scope</h2>
 <ol>
-<li>DataStax built SAI for DSE 6.8 and contributed it to Apache as CEP-7. Apache Cassandra 5.0 then shipped its own
-implementation with its own on-disk format, also called <code>aa</code>.</li>
-<li>DataStax's tree has carried its own SAI since 2021 (STAR-121); on the 5.0 line that commit replaces Apache's SAI.
-Each later Apache SAI fix reached DataStax only by a hand port, or by DataStax fixing the same problem its own
-way; many reached it neither way.</li>
 <li>The audit checked all 220 Apache <code>cassandra-5.0</code> and <code>trunk</code> SAI commits against DataStax main-5.0 by behaviour:
 34 are restored by these commits, 120 were already present or equivalent, 57 don't apply, 4 are kept as
 documented deviations and 5 are deferred.</li>

@@ -131,7 +131,7 @@ dl.gloss { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:
     <li><a href="./">← Review guide</a></li>
     <li><a href="overview.html">← Why this work</a></li>
     <li><a href="#summary">Summary</a></li>
-    <li><a href="#history">How it came to be</a></li>
+    <li><a href="#base">Mainline and Apache</a></li>
     <li><a href="#fixes">Apache fixes</a></li>
     <li><a href="#series">The series</a></li>
     <li><a href="#ci">CI evidence</a></li>
@@ -146,7 +146,7 @@ dl.gloss { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:
 <header class="top" id="summary">
   <div class="eyebrow">DataStax main-5.0 · SAI · audit report · 2026-11-19, commit IDs updated 2026-11-25</div>
   <h1>Which Apache SAI fixes main-5.0 was missing, and what restores them</h1>
-  <p class="lede">DataStax's tree has carried its own SAI since 2021, so later Apache SAI fixes reached DataStax's 5.0 line (branch <code>main</code>, called main-5.0 here) only through a port by hand or an equivalent DataStax fix. This audit checked every Apache cassandra-5.0 and trunk SAI commit against main-5.0 by behaviour, restored the ones that apply in a 107-commit series on top of mainline, and filed the bugs it found along the way.</p>
+  <p class="lede">This audit checked every Apache cassandra-5.0 and trunk SAI commit by behaviour against DataStax's 5.0 line (branch <code>main</code>, called main-5.0 here), restored the ones that apply in a 107-commit series on top of mainline, and filed the bugs it found.</p>
   <p class="dim">Commit IDs on this page are those of the DataStax branch <code>main-5.0-fb7f1b7aee-merge</code> ("mainline") at <a href="https://github.com/JeremiahDJordan/cassandra/commit/5458f446c35ac71f2dc0ad68dc69f8130661301f"><code>5458f446c35</code></a>, published on the fork as <a href="https://github.com/JeremiahDJordan/cassandra/tree/in-progress/main-5.0-fb7f1b7aee-merge">in-progress/main-5.0-fb7f1b7aee-merge</a>; each ID links to its commit there. Issue and PR numbers refer to the public fork <a href="https://github.com/JeremiahDJordan/cassandra">JeremiahDJordan/cassandra</a>; commits that are only on Apache's branches link to <a href="https://github.com/apache/cassandra">apache/cassandra</a>.</p>
   <div class="tiles">
     <div class="tile"><b>220</b><span>Apache SAI commits classified</span></div>
@@ -160,27 +160,8 @@ dl.gloss { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:
     <div><dt>Earlier builds</dt><dd>Build and lint at 002 to 105, and the SAI sweeps at the default format and at <code>ga</code> with the vector tests, ran on earlier bases of the series; <a href="#ci">CI evidence</a> gives each build's results.</dd></div>
   </dl>
 </header>
-<section id="history">
-  <h2>How main-5.0's SAI came to be</h2>
-  <div class="cols2">
-    <div class="card">
-      <h3>Two SAIs with one name</h3>
-      <p>DataStax built SAI for DSE 6.8 and contributed it as CEP-7. Apache then re-implemented it for 5.0 with its own on-disk format, also called <code>aa</code> (little-endian, CRC32C, a block-balanced tree for numerics, jvector 1.0.2).</p>
-      <p>In 2021 <a href="https://github.com/JeremiahDJordan/cassandra/commit/1e4f8b091faeeecf3fa716d719f3924f2dc092d1"><code>1e4f8b091fa</code></a> (STAR-121, "Port SAI from DSE to OS") replaced Apache's SAI in DataStax's tree with DSE's (613 files changed). Since then 568 DataStax commits have changed SAI, mostly CNDB and STAR work. Only a few port Apache tickets.</p>
-    </div>
-    <div class="card">
-      <h3>Why the fixes were lost</h3>
-      <p>main-5.0 is about 1,850 DataStax commits replayed onto Apache 5.0.7. The STAR-121 replay deletes Apache's SAI history again, so each Apache SAI fix after 2021 needed a hand port or an equivalent DataStax fix, and many got neither. Sometimes DataStax had no matching code, sometimes it had fixed the problem differently, and sometimes it diverged on purpose.</p>
-      <p>What that cost:</p>
-      <ul>
-        <li>no reading of Apache-written SAI files, so an upgrade meant a full rebuild;</li>
-        <li>Apache-only correctness fixes were missing;</li>
-        <li>DataStax-only operators were sent to Apache replicas;</li>
-        <li>many bugs existed only on DataStax.</li>
-      </ul>
-    </div>
-  </div>
-  <h3>The merge and mainline</h3>
+<section id="base">
+  <h2>Mainline and Apache since the audit</h2>
   <p>Mainline is <code>main-5.0-fb7f1b7aee-merge</code>: main-5.0 <a href="https://github.com/JeremiahDJordan/cassandra/commit/5141da547d7783f5565ea77a9dda965a6c67d12d"><code>5141da547d7</code></a> merged with Apache cassandra-5.0 <a href="https://github.com/JeremiahDJordan/cassandra/commit/fb7f1b7aeebb9565305aad76025530dc30f697fb"><code>fb7f1b7aee</code></a> as <a href="https://github.com/JeremiahDJordan/cassandra/commit/f12250ca21c7f8811a3fff2b0712a04e7696c631"><code>f12250ca21c</code></a>, then 95 numbered commits, the two unrepaired-tombstone fixes, the series and later fixes. Its history has been rewritten; commit IDs from before 2026-11-25 may not resolve.</p>
   <p>Since the audit's base, Apache cassandra-5.0 has moved 8 commits, to <a href="https://github.com/apache/cassandra/commit/5f11d4bd5c27b1b9c711efb43fc15dda6b643065"><code>5f11d4bd5c2</code></a>. The only new SAI commit is CASSANDRA-21863. Series commit 093 handles its case differently: it evaluates per element the frozen-collection <code>CONTAINS</code> queries that 21863 rejects (a maintainer decision). Apache's tests for its other fixes, adapted, pass on mainline; its part for <code>IN</code> and <code>BETWEEN</code> targets applies only to 6.0.</p>
 </section>
@@ -341,7 +322,7 @@ dl.gloss { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:
     <tr><td class="nowrap">#446, #447, #445</td><td class="note">row 01: gaps in the names read path (#447 is mainline's <a href="https://github.com/JeremiahDJordan/cassandra/commit/0c88ef824180d2f31202cce040d0c591f065a590"><code>0c88ef82418</code></a>)</td><td class="note">4 new tests fail before each</td></tr>
     </tbody>
   </table></div>
-  <h3>Cost that stays</h3>
+  <h3>Remaining read cost</h3>
   <p>Fix 01 brings range reads from SSTables back to main-5.0's speed. Memtable reads stay slower than on main-5.0 (<a href="https://github.com/JeremiahDJordan/cassandra/commit/5141da547d7783f5565ea77a9dda965a6c67d12d"><code>5141da547d7</code></a>), by 6% to 128% (40-column skip-list tables the most), and reads with an SSTable holding expired data by 23% to 94%. That is the cost of the correctness fix itself (<a href="https://github.com/JeremiahDJordan/cassandra/commit/8b535907ba16ddc357f156ba0688e878481f8232"><code>8b535907ba1</code></a>): a row kept alive by cells older than its expired row marker must not be dropped. Memtable-only reads against the code before fix 01 are within noise. On the Apache side (#158), memtable-only reads are still 77–141% slower.</p>
 </section>
 <section id="bugs">
@@ -386,7 +367,7 @@ dl.gloss { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:
     <tr><td class="nowrap-sm"><strong>Keyspace schema changes</strong></td><td class="note">Creating, altering or dropping a keyspace bumps the global change counter: one recheck per active scope per schema change. It could be per keyspace; a cold path, negligible.</td></tr>
     <tr><td class="nowrap-sm"><strong>CASSANDRA-21671</strong></td><td class="note">On Apache cassandra-5.0 (unreleased 5.0.10) and trunk; not a clear regression, not filed. Its SAI builder part is fixed by mainline <a href="https://github.com/JeremiahDJordan/cassandra/commit/4ee9a6be339fc77fac26494076b0543c24b85d47"><code>4ee9a6be339</code></a> and series 104. Left out on purpose: the BTI range-read change of 256 KiB per SSTable. Fork PR #442 ports parts of 21671, which may bring the BTI range-read cost to base-5.0.</td></tr>
     <tr><td class="nowrap-sm"><strong>Writing Apache's <code>aa</code></strong></td><td class="note">Writing Apache's <code>aa</code> format when pinned, for a rolling downgrade to Apache 5.0, is about the size of the reader work (about 5,300 lines over 5 commits). Deferred on 2026-11-15. Precondition: Apache 5.0 must read DataStax's SSTables, and the rest of a rolling downgrade must work.</td></tr>
-    <tr><td class="nowrap-sm"><strong>Memtable-only read cost</strong></td><td class="note">See "Cost that stays" under Performance.</td></tr>
+    <tr><td class="nowrap-sm"><strong>Memtable-only read cost</strong></td><td class="note">See "Remaining read cost" under Performance.</td></tr>
     <tr><td class="nowrap-sm"><strong>#211, #212, #213</strong></td><td class="note">Vector graph reachability, a <code>rerank_k</code> 0 NullPointerException, and open-ended collection slices (#213 = CASSANDRA-17403): filed, no PR.</td></tr>
     <tr><td class="nowrap-sm"><strong>#277</strong></td><td class="note">After <code>ALTER TYPE</code>, SAI indexes keep the original type: raised to critical, no PR.</td></tr>
     <tr><td class="nowrap-sm"><strong>Selected filed issues without a PR</strong></td><td class="note">#198, #201, #204, #228, #239 (a 6,000-line fix that needs the 5.0 merge), #242, #240/#241, #278, #281, #370, #371, #376, #378, #381, #382 (high: <code>CREATE INDEX</code> silently queryable with 0 of 3,200 rows on main-5.0), #430 (mixed versions, <code>skipTo</code>).</td></tr>

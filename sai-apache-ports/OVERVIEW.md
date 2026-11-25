@@ -2,14 +2,10 @@
 
 *Read it as a web page: <https://jeremiahdjordan.github.io/ai-review-guides/sai-apache-ports/overview.html>*
 
-DataStax's Cassandra 5.0 line (main-5.0) has carried its own Storage-Attached Index (SAI), the one from DSE 6.8, since
-2021. Apache Cassandra fixed its SAI many times after that, but a fix reached DataStax only if someone ported it by
-hand or DataStax fixed the same problem its own way, and many reached it neither way. DataStax's SAI also had bugs
-of its own that Apache's code never had.
-
-An audit compared every Apache `cassandra-5.0` and `trunk` SAI commit with main-5.0 by behaviour, and filed every bug
-it found. A series of 107 commits restores the missing Apache fixes that apply to main-5.0 and fixes DataStax bugs in the same code. The [review guide](https://jeremiahdjordan.github.io/ai-review-guides/sai-apache-ports/) says how to review it; the
-[audit report](https://jeremiahdjordan.github.io/ai-review-guides/sai-apache-ports/audit-report.html) has the details.
+An audit compared every Apache `cassandra-5.0` and `trunk` SAI commit with DataStax main-5.0 by behaviour, and filed
+every bug it found. A series of 107 commits restores the missing Apache fixes that apply to main-5.0 and fixes
+DataStax bugs in the same code. The [review guide](https://jeremiahdjordan.github.io/ai-review-guides/sai-apache-ports/) says how to review it; the [audit report](https://jeremiahdjordan.github.io/ai-review-guides/sai-apache-ports/audit-report.html)
+has the details.
 
 The 220 Apache SAI commits: 34 restored by the series, 120 already present or equivalent, 57 not applicable, 4 documented deviations, 5 deferred.
 
